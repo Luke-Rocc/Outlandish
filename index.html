@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outlandish Live</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1c1c1e; --muted: #6b6b70;
+    --line: #e3e1dc; --accent: #b4442c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121214; --card: #1c1c1f; --text: #f2f2f4; --muted: #9a9aa0;
+      --line: #2c2c31; --accent: #e0694f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; margin-top: 18px;
+  }
+  h2 { margin: 0 0 4px; font-size: 19px; }
+  h3 { margin: 18px 0 6px; font-size: 16px; }
+  h3:first-child { margin-top: 0; }
+  .note { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .contact + .contact { margin-top: 16px; }
+  .contact-name { font-weight: 600; }
+  .contact-phone { color: var(--muted); }
+  .buttons { display: flex; gap: 10px; margin-top: 10px; }
+  .buttons a, button {
+    flex: 1; text-align: center; padding: 10px; border-radius: 10px;
+    text-decoration: none; font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; border: 1px solid var(--accent);
+  }
+  .buttons a.secondary, button.secondary { background: transparent; color: var(--accent); }
+  form { display: flex; flex-direction: column; gap: 10px; }
+  input[type=email] {
+    font: inherit; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  }
+  .checklist { list-style: none; padding: 0; }
+  .checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .checklist input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--accent); }
+  .checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+  .empty { color: var(--muted); font-style: italic; }
+  .signed-in { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+  .signed-in button { flex: none; padding: 6px 12px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Outlandish Live</h1>
+    <p>22.–26. oktober 2026</p>
+  </header>
+
+  <section>
+    <h2>Åbne punkter</h2>
+    <p class="note">Afkrydsninger gemmes kun på din egen telefon.</p>
+    <ul class="checklist" id="open-items"></ul>
+  </section>
+
+  <section>
+    <h2>Ved ankomst</h2>
+    <ul>
+      <li>Visumfrit for danskere i begge lande (op til 30 dage).</li>
+      <li>Usbekistan: man skal registreres inden for 3 dage. Hotellet gør det normalt automatisk.</li>
+      <li>Køb lokalt SIM-kort i lufthavnen. Yandex Go virker til taxa i begge lande.</li>
+      <li>Hav kontanter: usbekiske som og kasakhiske tenge.</li>
+      <li>Begge lande er GMT+5. Danmark skifter til vintertid søndag 25/10.</li>
+      <li>Vejr: ca. 5–18 grader, koldest i Astana. Tag varm jakke med.</li>
+    </ul>
+  </section>
+
+  <section id="login" hidden>
+    <h2>Log ind</h2>
+    <p class="note">Kontakter, dagpenge og riders kræver login. Du får et link på mail.</p>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="din@mail.dk" required autocomplete="email">
+      <button type="submit">Send login-link</button>
+    </form>
+    <p class="note" id="login-status" hidden></p>
+  </section>
+
+  <div id="private" hidden>
+    <section>
+      <div class="signed-in">
+        <span id="signed-in-as"></span>
+        <button class="secondary" id="logout">Log ud</button>
+      </div>
+    </section>
+    <section id="contacts-section">
+      <h2>Kontakt</h2>
+      <div id="contacts"></div>
+    </section>
+    <div id="private-sections"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // Tilføj åbne punkter her. Hvert punkt skal have et unikt id.
+  const OPEN_ITEMS = [
+    // { id: "eksempel", text: "Bekræft hotel i Astana" },
+  ];
+
+  const STORAGE_KEY = "outlandish-live-2026-checked";
+  let checked = {};
+  try { checked = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) {}
+
+  const list = document.getElementById("open-items");
+  if (OPEN_ITEMS.length === 0) {
+    list.innerHTML = '<li class="empty">Ingen åbne punkter lige nu.</li>';
+  }
+  for (const item of OPEN_ITEMS) {
+    const li = document.createElement("li");
+    const label = document.createElement("label");
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = !!checked[item.id];
+    box.addEventListener("change", () => {
+      checked[item.id] = box.checked;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch (e) {}
+    });
+    const span = document.createElement("span");
+    span.textContent = item.text;
+    label.append(box, span);
+    li.append(label);
+    list.append(li);
+  }
+
+  // Private data ligger i Supabase og kan kun læses af godkendte e-mails (RLS).
+  const SUPABASE_URL = "https://bjdglyurrpdnjgyfopek.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_7rEkE6x7gwGbS1s5LU8o3A_vjhkk21T";
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const el = (id) => document.getElementById(id);
+
+  function make(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  async function showPrivate(session) {
+    el("login").hidden = true;
+    el("private").hidden = false;
+    el("signed-in-as").textContent = "Logget ind som " + session.user.email;
+
+    const [contacts, sections] = await Promise.all([
+      db.from("contacts").select("name, role, phone").order("position"),
+      db.from("private_sections").select("title, items").order("position"),
+    ]);
+
+    const contactsEl = el("contacts");
+    contactsEl.replaceChildren();
+    if (!contacts.data?.length && !sections.data?.length) {
+      contactsEl.append(make("p", "Din e-mail har ikke adgang til de private oplysninger.", "empty"));
+      el("private-sections").replaceChildren();
+      return;
+    }
+    for (const c of contacts.data || []) {
+      const box = make("div", null, "contact");
+      box.append(make("div", c.role ? `${c.name}, ${c.role}` : c.name, "contact-name"));
+      if (c.phone) {
+        const digits = c.phone.replace(/[^\d+]/g, "");
+        box.append(make("div", c.phone, "contact-phone"));
+        const buttons = make("div", null, "buttons");
+        const call = make("a", "Ring");
+        call.href = "tel:" + digits;
+        const wa = make("a", "WhatsApp", "secondary");
+        wa.href = "https://wa.me/" + digits.replace("+", "");
+        buttons.append(call, wa);
+        box.append(buttons);
+      }
+      contactsEl.append(box);
+    }
+
+    const sectionsEl = el("private-sections");
+    sectionsEl.replaceChildren();
+    for (const s of sections.data || []) {
+      const section = make("section");
+      section.append(make("h2", s.title));
+      const ul = make("ul");
+      for (const item of s.items) ul.append(make("li", item));
+      section.append(ul);
+      sectionsEl.append(section);
+    }
+  }
+
+  function showLogin() {
+    el("private").hidden = true;
+    el("login").hidden = false;
+  }
+
+  el("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = el("login-status");
+    status.hidden = false;
+    status.textContent = "Sender…";
+    const { error } = await db.auth.signInWithOtp({
+      email: el("email").value.trim(),
+      options: { emailRedirectTo: location.origin + location.pathname },
+    });
+    status.textContent = error
+      ? "Kunne ikke sende link: " + error.message
+      : "Tjek din mail og åbn linket på denne telefon.";
+  });
+
+  el("logout").addEventListener("click", () => db.auth.signOut());
+
+  db.auth.onAuthStateChange((_event, session) => {
+    // Kør uden for callbacken, så supabase-js ikke låser sig selv.
+    setTimeout(() => (session ? showPrivate(session) : showLogin()), 0);
+  });
+</script>
+</body>
+</html>
