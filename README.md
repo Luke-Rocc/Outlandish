@@ -5,19 +5,25 @@ Infoside til Outlandish Live, 22.–26. oktober 2026. Selve siden ligger i `publ
 ## Opsætning
 
 - **GitHub:** al koden. Repoet skal være **privat**, fordi siden indeholder telefonnumre og dagpenge.
-- **Cloudflare:** hosting (Worker med statiske filer, se `wrangler.toml`) og login via Cloudflare Access.
+- **Cloudflare:** hosting og login (Worker med statiske filer, se `wrangler.toml`).
 
 Hver push til `claude/outlandish-live-2026-eggpi0` lægges automatisk online af Cloudflare.
 
-## Login med Cloudflare Access
+## Login
 
-Hele siden er låst, så kun godkendte e-mails kan se den. Man skriver sin e-mail og får en engangskode.
+Hele siden er låst bag brugernavn og password (`src/worker.js`, login-siden er `public/login.html`).
+Brugerne ligger som secrets i Cloudflare, ikke i koden:
 
-1. Cloudflare → **Workers & Pages** → **outlandish** → **Settings** → **Domains & Routes**.
-2. Ud for **workers.dev**: klik **Enable Cloudflare Access**.
-3. Klik **Manage Cloudflare Access** og tilføj de e-mails, der må se siden.
+Cloudflare → **Workers & Pages** → **outlandish** → **Settings** → **Variables and Secrets** → **Add** (type **Secret**):
 
-Gratis op til 50 personer.
+| Navn | Værdi |
+|---|---|
+| `USERS` | `navn:password,navn2:password2` |
+| `SESSION_SECRET` | en lang tilfældig tekst |
+
+Ændrer du `USERS`, gælder det med det samme. Ændrer du `SESSION_SECRET`, bliver alle logget ud.
+
+Lokalt: læg samme værdier i `.dev.vars` og kør `npx wrangler dev`.
 
 ## Sikkerhed
 
