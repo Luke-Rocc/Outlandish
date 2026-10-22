@@ -34,7 +34,7 @@ Tilføjer du et eget domæne i Cloudflare, skal det også på listen.
 
 ### Sikkerhed
 
-`public/_headers` sætter sikkerheds-headers. Content-Security-Policy tillader kun scripts fra siden selv og jsDelivr og kun forbindelser til Supabase-projektet. Skifter du Supabase-projekt, skal adressen også rettes der.
+`public/_headers` sætter sikkerheds-headers. Content-Security-Policy tillader kun scripts fra siden selv og kun forbindelser til Supabase-projektet. Supabase-biblioteket ligger i `public/vendor/`, så siden ikke afhænger af andre tjenester end GitHub, Cloudflare og Supabase. Skifter du Supabase-projekt, skal adressen også rettes der.
 
 ## Adgang
 
