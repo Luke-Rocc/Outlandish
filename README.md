@@ -3,26 +3,31 @@
 Infoside til Outlandish Live, 22.–26. oktober 2026. Selve siden ligger i `public/`.
 Kontakter, dagpenge og riders ligger i Supabase og vises kun efter login.
 
-## Cloudflare Pages
+## Opsætning
+
+- **GitHub:** al koden
+- **Cloudflare:** hosting (Worker med statiske filer, se `wrangler.toml`)
+- **Supabase:** database og login
+
+## Cloudflare
 
 Siden har intet build-trin. Cloudflare serverer `public/` direkte.
 
-1. Log ind på Cloudflare → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
+1. Log ind på Cloudflare → **Workers & Pages** → **Create** → **Import a repository**.
 2. Vælg repoet `Luke-Rocc/Outlandish`.
 3. Indstillinger:
-   - Production branch: `claude/outlandish-live-2026-eggpi0`
-   - Framework preset: `None`
+   - Project name: `outlandish` (skal matche `name` i `wrangler.toml`)
    - Build command: *(tom)*
-   - Build output directory: `public`
-4. Klik **Save and Deploy**. Siden kommer på `https://outlandish.pages.dev` (eller et lignende navn, som Cloudflare viser).
+   - Deploy command: `npx wrangler deploy` (standard)
+4. Klik **Deploy**. Under **Settings** → **Build** sættes branch til `claude/outlandish-live-2026-eggpi0`.
 
-Hver push til branchen deployer siden automatisk.
+Siden kommer på `https://outlandish.<dit-subdomæne>.workers.dev`. Hver push til branchen deployer automatisk.
 
 ### Supabase-login
 
 Login-linket virker kun på adresser, Supabase kender. I Supabase-projektet **Outlandish** → **Authentication** → **URL Configuration**:
 
-- Site URL: din Cloudflare-adresse, fx `https://outlandish.pages.dev/`
+- Site URL: din Cloudflare-adresse, fx `https://outlandish.<dit-subdomæne>.workers.dev/`
 - Redirect URLs: samme adresse
 
 Tilføjer du et eget domæne i Cloudflare, skal det også på listen.
