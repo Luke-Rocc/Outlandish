@@ -89,7 +89,7 @@ li{margin:4px 0}
       <input class="field" id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false" required>
       <label class="f mt" for="lPass">Password</label>
       <input class="field" id="lPass" type="password" autocomplete="current-password" required>
-      <label class="remember"><input type="checkbox" id="lRemember" checked> Husk mig på denne telefon</label>
+      <label class="remember"><input type="checkbox" id="lRemember" checked> Husk mit brugernavn</label>
       <p class="err" id="lErr" role="alert"></p>
       <button class="btn" id="lLogin" type="submit">Log på</button>
       <p class="note">Har du ikke en bruger? Spørg Luke.</p>
@@ -171,17 +171,19 @@ li{margin:4px 0}
   const SUPABASE_KEY = "sb_publishable_7rEkE6x7gwGbS1s5LU8o3A_vjhkk21T";
   const EMAIL_DOMAIN = "outlandish-live.dk";
 
-  // "Husk mig": sessionen gemmes i localStorage, ellers kun til fanen lukkes.
-  const REMEMBER_KEY = "outlandish-remember";
-  const store = () => {
-    try { return localStorage.getItem(REMEMBER_KEY) === "0" ? sessionStorage : localStorage; }
-    catch (e) { return null; }
-  };
+  // Login-skærmen skal altid komme først, når appen åbnes: sessionen gemmes kun,
+  // til appen lukkes. "Husk mit brugernavn" udfylder bare brugernavnet næste gang.
+  const USERNAME_KEY = "outlandish-username";
+  try { localStorage.removeItem("outlandish-remember"); } catch (e) {}
   const authStorage = {
-    getItem: (k) => { try { return store()?.getItem(k) ?? null; } catch (e) { return null; } },
-    setItem: (k, v) => { try { store()?.setItem(k, v); } catch (e) {} },
-    removeItem: (k) => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} },
+    getItem: (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+    setItem: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
+    removeItem: (k) => { try { sessionStorage.removeItem(k); localStorage.removeItem(k); } catch (e) {} },
   };
+  // Ryd sessioner, som den tidligere udgave gemte permanent.
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("sb-")) localStorage.removeItem(k);
+  } catch (e) {}
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   });
@@ -197,6 +199,12 @@ li{margin:4px 0}
   function showLogin() {
     el("app").hidden = true;
     el("login").hidden = false;
+    let saved = null;
+    try { saved = localStorage.getItem(USERNAME_KEY); } catch (e) {}
+    if (saved && !el("lUser").value) {
+      el("lUser").value = saved;
+      el("lPass").focus();
+    }
   }
 
   async function showApp() {
@@ -248,7 +256,10 @@ li{margin:4px 0}
     const password = el("lPass").value;
     el("lErr").textContent = "";
     el("lLogin").disabled = true;
-    try { localStorage.setItem(REMEMBER_KEY, el("lRemember").checked ? "1" : "0"); } catch (e) {}
+    try {
+      if (el("lRemember").checked) localStorage.setItem(USERNAME_KEY, name);
+      else localStorage.removeItem(USERNAME_KEY);
+    } catch (e) {}
     const { error } = await db.auth.signInWithPassword({ email: `${name}@${EMAIL_DOMAIN}`, password });
     el("lLogin").disabled = false;
     if (error) {
