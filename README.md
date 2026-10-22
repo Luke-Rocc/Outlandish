@@ -27,6 +27,18 @@ e-mail `navn@outlandish-live.dk`, password, og sæt flueben i **Auto Confirm Use
 insert into private.allowed_emails (email) values ('navn@outlandish-live.dk');
 ```
 
+## Dagsprogram
+
+Øverst kan man vælge dag (22.–26. oktober). Programmet ligger i tabellen `public.schedule_items`.
+Tilføj et punkt i Supabase → **SQL Editor**:
+
+```sql
+insert into public.schedule_items (day, position, time, title, details)
+values ('2026-10-24', 1, '21:00', 'Show', 'Soundcheck kl. 17.');
+```
+
+`time` og `details` kan udelades. `position` bestemmer rækkefølgen inden for dagen.
+
 ## Sikkerhed
 
 `public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet.

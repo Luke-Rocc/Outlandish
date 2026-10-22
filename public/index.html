@@ -78,6 +78,19 @@ li{margin:4px 0}
 .checklist input{margin-top:4px;width:18px;height:18px;accent-color:var(--gold)}
 .checklist input:checked + span{color:var(--muted);text-decoration:line-through}
 .empty{color:var(--muted);font-style:italic}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:18px}
+.days button{border:0;background:none;border-radius:9px;padding:8px 2px;cursor:pointer;color:var(--muted);line-height:1.2;display:flex;flex-direction:column;align-items:center}
+.days button b{font-size:20px;color:var(--ink)}
+.days button span{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.days button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold)}
+.days button[aria-pressed="true"] b{color:var(--on-gold)}
+.days button.today span::after{content:" •"}
+.program{list-style:none;padding:0}
+.program li{display:grid;grid-template-columns:56px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);margin:0}
+.program li:last-child{border-bottom:0;padding-bottom:0}
+.program .time{font-weight:600;font-variant-numeric:tabular-nums;color:var(--gold)}
+.program .title{font-weight:600}
+.program .details{color:var(--muted);font-size:15px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -111,6 +124,12 @@ li{margin:4px 0}
     </div>
     <button class="link" id="logout" type="button">Log ud</button>
   </header>
+
+  <nav class="days" id="days" aria-label="Vælg dag"></nav>
+  <section>
+    <h2 id="day-title">Program</h2>
+    <ul class="program" id="program"></ul>
+  </section>
 
   <section>
     <h2>Åbne punkter</h2>
@@ -210,14 +229,73 @@ li{margin:4px 0}
     }
   }
 
+  // Dagene på turen. Programmet for hver dag ligger i Supabase (schedule_items).
+  const DAYS = ["2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26"];
+  const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+  const MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
+    "august", "september", "oktober", "november", "december"];
+  const DAY_KEY = "outlandish-day";
+  let schedule = [];
+
+  const localDate = (iso) => new Date(iso + "T12:00:00");
+  function todayIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function selectDay(iso) {
+    try { sessionStorage.setItem(DAY_KEY, iso); } catch (e) {}
+    for (const b of el("days").children) b.setAttribute("aria-pressed", String(b.dataset.day === iso));
+    const d = localDate(iso);
+    const weekday = WEEKDAYS[d.getDay()];
+    el("day-title").textContent =
+      `${weekday[0].toUpperCase() + weekday.slice(1)} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+    const items = schedule.filter((i) => i.day === iso);
+    const list = el("program");
+    list.replaceChildren();
+    if (!items.length) list.append(make("li", "Intet program for denne dag endnu.", "empty"));
+    for (const i of items) {
+      const li = make("li");
+      li.append(make("div", i.time || "", "time"));
+      const body = make("div");
+      body.append(make("div", i.title, "title"));
+      if (i.details) body.append(make("div", i.details, "details"));
+      li.append(body);
+      list.append(li);
+    }
+  }
+
+  function renderDays() {
+    const nav = el("days");
+    nav.replaceChildren();
+    const today = todayIso();
+    for (const iso of DAYS) {
+      const d = localDate(iso);
+      const b = make("button");
+      b.type = "button";
+      b.dataset.day = iso;
+      if (iso === today) b.classList.add("today");
+      b.append(make("span", WEEKDAYS[d.getDay()].slice(0, 3)), make("b", String(d.getDate())));
+      b.addEventListener("click", () => selectDay(iso));
+      nav.append(b);
+    }
+    let saved = null;
+    try { saved = sessionStorage.getItem(DAY_KEY); } catch (e) {}
+    selectDay(DAYS.includes(saved) ? saved : DAYS.includes(today) ? today : DAYS[0]);
+  }
+
   async function showApp() {
     el("login").hidden = true;
     el("app").hidden = false;
+    renderDays();
 
-    const [contacts, sections] = await Promise.all([
+    const [contacts, sections, program] = await Promise.all([
       db.from("contacts").select("name, role, phone").order("position"),
       db.from("private_sections").select("title, items").order("position"),
+      db.from("schedule_items").select("day, time, title, details").order("day").order("position"),
     ]);
+    schedule = program.data || [];
+    selectDay(el("days").querySelector('[aria-pressed="true"]').dataset.day);
 
     const contactsEl = el("contacts");
     contactsEl.replaceChildren();
