@@ -1,11 +1,13 @@
 # Outlandish Live
 
-Infoside til Outlandish Live, 22.–26. oktober 2026. Selve siden ligger i `public/`.
+Infoside til Outlandish Live, 22.–26. oktober 2026: **https://outlandish.pages.dev**
+
+Selve siden ligger i `public/`.
 
 ## Opsætning
 
 - **GitHub:** al koden.
-- **Cloudflare:** hosting af `public/` som statiske filer (se `wrangler.toml`). Hver push til `claude/outlandish-live-2026-eggpi0` lægges automatisk online.
+- **Cloudflare Pages:** hosting af `public/` som statiske filer (build output directory: `public`). Hver push til `claude/outlandish-live-2026-eggpi0` lægges automatisk online.
 - **Supabase** (projekt *Outlandish*): login og de private oplysninger (kontakter, dagpenge, riders).
 
 ## Login
