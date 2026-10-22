@@ -8,13 +8,13 @@
 <link rel="icon" href="data:,">
 <style>
   :root {
-    --bg: #f6f5f2; --card: #ffffff; --text: #1c1c1e; --muted: #6b6b70;
-    --line: #e3e1dc; --accent: #b4442c;
+    --bg: #E7E8E4; --card: #FFFFFF; --text: #1E2A34; --muted: #66727C;
+    --line: #D3D6D1; --accent: #A87C22; --on-accent: #FFFFFF;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #121214; --card: #1c1c1f; --text: #f2f2f4; --muted: #9a9aa0;
-      --line: #2c2c31; --accent: #e0694f;
+      --bg: #141A1F; --card: #1D252C; --text: #E8EAE6; --muted: #98A2AA;
+      --line: #2E3942; --accent: #D4A94B; --on-accent: #1A1406;
     }
   }
   * { box-sizing: border-box; }
@@ -23,10 +23,13 @@
     font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  header h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
-  .logout { color: var(--accent); font-weight: 600; text-decoration: none; padding-top: 6px; white-space: nowrap; }
-  header p { margin: 4px 0 0; color: var(--muted); }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 56px; height: 56px; flex: none; }
+  @media (prefers-color-scheme: dark) { .brand img { filter: invert(1); } }
+  header h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; line-height: 1.15; }
+  .logout { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  header p { margin: 2px 0 0; color: var(--muted); }
   section {
     background: var(--card); border: 1px solid var(--line); border-radius: 14px;
     padding: 18px; margin-top: 18px;
@@ -42,7 +45,7 @@
   .buttons a {
     flex: 1; text-align: center; padding: 10px; border-radius: 10px;
     text-decoration: none; font-weight: 600;
-    background: var(--accent); color: #fff; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent);
   }
   .buttons a.secondary { background: transparent; color: var(--accent); }
   .checklist { list-style: none; padding: 0; }
@@ -55,9 +58,12 @@
 <body>
 <main>
   <header>
-    <div>
-      <h1>Outlandish Live</h1>
-      <p>22.–26. oktober 2026</p>
+    <div class="brand">
+      <img src="/logo.svg" alt="">
+      <div>
+        <h1>Outlandish Live</h1>
+        <p>22.–26. oktober 2026</p>
+      </div>
     </div>
     <a class="logout" href="/logout">Log ud</a>
   </header>

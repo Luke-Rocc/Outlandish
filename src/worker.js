@@ -18,6 +18,8 @@ export default {
       if (await currentUser(request, env)) return redirect("/");
       return env.ASSETS.fetch(new Request(new URL("/login", url), request));
     }
+    // Logoet bruges på login-siden, så det må hentes uden login.
+    if (url.pathname === "/logo.svg") return env.ASSETS.fetch(request);
     if (url.pathname === "/logout") {
       return redirect("/login", `${COOKIE}=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0`);
     }
