@@ -91,6 +91,12 @@ li{margin:4px 0}
 .program .time{font-weight:600;font-variant-numeric:tabular-nums;color:var(--gold)}
 .program .title{font-weight:600}
 .program .details{color:var(--muted);font-size:15px;margin-top:2px}
+.flight{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;background:var(--field)}
+.flight-head{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.flight-no{color:var(--gold);white-space:nowrap}
+.flight-times{display:flex;gap:8px;align-items:baseline;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
+.flight-times span{color:var(--muted);font-size:16px;font-weight:400}
+.flight-meta{color:var(--muted);font-size:14px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -128,6 +134,7 @@ li{margin:4px 0}
   <nav class="days" id="days" aria-label="Vælg dag"></nav>
   <section>
     <h2 id="day-title">Program</h2>
+    <div id="flights"></div>
     <ul class="program" id="program"></ul>
   </section>
 
@@ -236,6 +243,30 @@ li{margin:4px 0}
     "august", "september", "oktober", "november", "december"];
   const DAY_KEY = "outlandish-day";
   let schedule = [];
+  let flights = [];
+
+  function renderFlights(iso) {
+    const box = el("flights");
+    box.replaceChildren();
+    for (const f of flights.filter((x) => x.day === iso)) {
+      const card = make("div", null, "flight");
+      const head = make("div", null, "flight-head");
+      head.append(make("span", `✈ ${f.from_place} → ${f.to_place}`), make("span", f.flight_no, "flight-no"));
+      card.append(head);
+      if (f.departs || f.arrives) {
+        const times = make("div", null, "flight-times");
+        times.append(document.createTextNode(f.departs || "?"), make("span", "→"), document.createTextNode(f.arrives || "?"));
+        card.append(times);
+      }
+      const meta = [
+        f.booking_ref && `Booking: ${f.booking_ref}`,
+        f.passengers && `Med: ${f.passengers}`,
+        f.notes,
+      ].filter(Boolean);
+      for (const m of meta) card.append(make("div", m, "flight-meta"));
+      box.append(card);
+    }
+  }
 
   const localDate = (iso) => new Date(iso + "T12:00:00");
   function todayIso() {
@@ -250,10 +281,13 @@ li{margin:4px 0}
     const weekday = WEEKDAYS[d.getDay()];
     el("day-title").textContent =
       `${weekday[0].toUpperCase() + weekday.slice(1)} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+    renderFlights(iso);
     const items = schedule.filter((i) => i.day === iso);
     const list = el("program");
     list.replaceChildren();
-    if (!items.length) list.append(make("li", "Intet program for denne dag endnu.", "empty"));
+    if (!items.length && !flights.some((f) => f.day === iso)) {
+      list.append(make("li", "Intet program for denne dag endnu.", "empty"));
+    }
     for (const i of items) {
       const li = make("li");
       li.append(make("div", i.time || "", "time"));
@@ -289,12 +323,16 @@ li{margin:4px 0}
     el("app").hidden = false;
     renderDays();
 
-    const [contacts, sections, program] = await Promise.all([
+    const [contacts, sections, program, flightRows] = await Promise.all([
       db.from("contacts").select("name, role, phone").order("position"),
       db.from("private_sections").select("title, items").order("position"),
       db.from("schedule_items").select("day, time, title, details").order("day").order("position"),
+      db.from("flights")
+        .select("day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
+        .order("day").order("position"),
     ]);
     schedule = program.data || [];
+    flights = flightRows.data || [];
     selectDay(el("days").querySelector('[aria-pressed="true"]').dataset.day);
 
     const contactsEl = el("contacts");

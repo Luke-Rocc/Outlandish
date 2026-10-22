@@ -39,6 +39,15 @@ values ('2026-10-24', 1, '21:00', 'Show', 'Soundcheck kl. 17.');
 
 `time` og `details` kan udelades. `position` bestemmer rækkefølgen inden for dagen.
 
+## Fly
+
+Fly vises under den rigtige dag. De ligger i tabellen `public.flights`:
+
+```sql
+insert into public.flights (day, position, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes)
+values ('2026-10-22', 1, 'TK 1786', 'København', 'Istanbul', '10:05', '15:20', 'ABC123', 'Alle', 'Terminal 3');
+```
+
 ## Sikkerhed
 
 `public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet.
