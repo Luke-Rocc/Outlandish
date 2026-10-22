@@ -4,27 +4,28 @@ Infoside til Outlandish Live, 22.–26. oktober 2026. Selve siden ligger i `publ
 
 ## Opsætning
 
-- **GitHub:** al koden. Repoet skal være **privat**, fordi siden indeholder telefonnumre og dagpenge.
-- **Cloudflare:** hosting og login (Worker med statiske filer, se `wrangler.toml`).
-
-Hver push til `claude/outlandish-live-2026-eggpi0` lægges automatisk online af Cloudflare.
+- **GitHub:** al koden.
+- **Cloudflare:** hosting af `public/` som statiske filer (se `wrangler.toml`). Hver push til `claude/outlandish-live-2026-eggpi0` lægges automatisk online.
+- **Supabase** (projekt *Outlandish*): login og de private oplysninger (kontakter, dagpenge, riders).
 
 ## Login
 
-Hele siden er låst bag brugernavn og password (`src/worker.js`, login-siden er `public/login.html`).
-Brugerne ligger som secrets i Cloudflare, ikke i koden:
+Man logger på med brugernavn og password, som i AURUM. Brugernavnet omsættes til en intern adresse
+`navn@outlandish-live.dk`. Der sendes ingen mails.
 
-Cloudflare → **Workers & Pages** → **outlandish** → **Settings** → **Variables and Secrets** → **Add** (type **Secret**):
+De private oplysninger ligger i tabellerne `public.contacts` og `public.private_sections` og kan kun læses af
+brugere, hvis adresse står i `private.allowed_emails` (row level security).
 
-| Navn | Værdi |
-|---|---|
-| `USERS` | `navn:password,navn2:password2` |
-| `SESSION_SECRET` | en lang tilfældig tekst |
+### Ny bruger
 
-Ændrer du `USERS`, gælder det med det samme. Ændrer du `SESSION_SECRET`, bliver alle logget ud.
+Supabase → **Authentication** → **Users** → **Add user** → **Create new user**:
+e-mail `navn@outlandish-live.dk`, password, og sæt flueben i **Auto Confirm User**. Kør derefter i **SQL Editor**:
 
-Lokalt: læg samme værdier i `.dev.vars` og kør `npx wrangler dev`.
+```sql
+insert into private.allowed_emails (email) values ('navn@outlandish-live.dk');
+```
 
 ## Sikkerhed
 
-`public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og henter intet udefra.
+`public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet.
+Supabase-biblioteket ligger i `public/vendor/`.

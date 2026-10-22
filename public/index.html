@@ -2,70 +2,111 @@
 <html lang="da">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Outlandish Live</title>
 <link rel="icon" href="data:,">
+<meta name="theme-color" content="#E7E8E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141A1F" media="(prefers-color-scheme: dark)">
 <style>
-  :root {
-    --bg: #E7E8E4; --card: #FFFFFF; --text: #1E2A34; --muted: #66727C;
-    --line: #D3D6D1; --accent: #A87C22; --on-accent: #FFFFFF;
+:root{
+  --bg:#E7E8E4; --surface:#FFFFFF; --ink:#1E2A34; --muted:#66727C; --line:#D3D6D1;
+  --gold:#A87C22; --on-gold:#FFFFFF; --danger:#B3261E; --field:#F5F6F3;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141A1F; --surface:#1D252C; --ink:#E8EAE6; --muted:#98A2AA; --line:#2E3942;
+    --gold:#D4A94B; --on-gold:#1A1406; --danger:#F2867E; --field:#172027;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141A1F; --card: #1D252C; --text: #E8EAE6; --muted: #98A2AA;
-      --line: #2E3942; --accent: #D4A94B; --on-accent: #1A1406;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand img { width: 56px; height: 56px; flex: none; }
-  @media (prefers-color-scheme: dark) { .brand img { filter: invert(1); } }
-  header h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; line-height: 1.15; }
-  .logout { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
-  header p { margin: 2px 0 0; color: var(--muted); }
-  section {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    padding: 18px; margin-top: 18px;
-  }
-  h2 { margin: 0 0 4px; font-size: 19px; }
-  h3 { margin: 18px 0 6px; font-size: 16px; }
-  .note { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
-  ul { margin: 0; padding-left: 20px; }
-  li { margin: 4px 0; }
-  .contact-name { font-weight: 600; }
-  .contact-phone { color: var(--muted); }
-  .buttons { display: flex; gap: 10px; margin-top: 10px; }
-  .buttons a {
-    flex: 1; text-align: center; padding: 10px; border-radius: 10px;
-    text-decoration: none; font-weight: 600;
-    background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent);
-  }
-  .buttons a.secondary { background: transparent; color: var(--accent); }
-  .checklist { list-style: none; padding: 0; }
-  .checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-  .checklist input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--accent); }
-  .checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
-  .empty { color: var(--muted); font-style: italic; }
+  .logo{filter:invert(1)}
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+[hidden]{display:none!important}
+
+/* login */
+#login{display:flex;min-height:100vh;min-height:100dvh;align-items:center;justify-content:center;padding:24px 16px}
+.login-box{width:100%;max-width:380px}
+.login-head{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:22px}
+.login-head .logo{display:block;width:min(240px,64vw);aspect-ratio:1}
+.sub{color:var(--muted);font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+label.f{display:block;font-size:14px;color:var(--muted);margin:0 0 4px}
+.mt{margin-top:12px}
+.field{width:100%;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px}
+.field:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+.remember{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:15px;cursor:pointer}
+.remember input{width:22px;height:22px;accent-color:var(--gold);margin:0}
+.err{color:var(--danger);font-size:14px;min-height:20px;margin:8px 0 0}
+.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:600;font-size:16px;cursor:pointer;min-height:50px;margin-top:14px;background:var(--gold);color:var(--on-gold);width:100%}
+.btn:disabled{opacity:.6}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0;text-align:center}
+/* intro som i AURUM: logoet zoomer ind på plads, så glider login-felterne frem */
+.login-head .logo{animation:introIn 1.1s cubic-bezier(.16,1,.3,1) both}
+@keyframes introIn{0%{transform:scale(1.35) rotate(-12deg);opacity:0}35%{opacity:1}100%{transform:none;opacity:1}}
+.login-head .sub,#loginForm{animation:riseIn .7s .55s cubic-bezier(.16,1,.3,1) both}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.login-head .logo,.login-head .sub,#loginForm{animation:none}}
+
+/* siden */
+main{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:56px;height:56px;flex:none}
+header h1{margin:0;font-size:26px;letter-spacing:-.01em;line-height:1.15}
+header p{margin:2px 0 0;color:var(--muted)}
+.link{border:0;background:none;color:var(--gold);font-weight:600;padding:6px 0;cursor:pointer;white-space:nowrap}
+main section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+h2{margin:0 0 4px;font-size:19px}
+h3{margin:18px 0 6px;font-size:16px}
+main .note{margin:0 0 12px;font-size:14px;text-align:left}
+ul{margin:0;padding-left:20px}
+li{margin:4px 0}
+.contact + .contact{margin-top:16px}
+.contact-name{font-weight:600}
+.contact-phone{color:var(--muted)}
+.buttons{display:flex;gap:10px;margin-top:10px}
+.buttons a{flex:1;text-align:center;padding:10px;border-radius:10px;text-decoration:none;font-weight:600;background:var(--gold);color:var(--on-gold);border:1px solid var(--gold)}
+.buttons a.secondary{background:transparent;color:var(--gold)}
+.checklist{list-style:none;padding:0}
+.checklist label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checklist input{margin-top:4px;width:18px;height:18px;accent-color:var(--gold)}
+.checklist input:checked + span{color:var(--muted);text-decoration:line-through}
+.empty{color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
-<main>
+<section id="login" aria-label="Log på" hidden>
+  <div class="login-box">
+    <div class="login-head">
+      <h1 style="margin:0"><img class="logo" src="logo.svg" alt="Outlandish"></h1>
+      <div class="sub">Live · 22.–26. oktober 2026</div>
+    </div>
+    <form class="card" id="loginForm">
+      <label class="f" for="lUser">Brugernavn</label>
+      <input class="field" id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <label class="f mt" for="lPass">Password</label>
+      <input class="field" id="lPass" type="password" autocomplete="current-password" required>
+      <label class="remember"><input type="checkbox" id="lRemember" checked> Husk mig på denne telefon</label>
+      <p class="err" id="lErr" role="alert"></p>
+      <button class="btn" id="lLogin" type="submit">Log på</button>
+      <p class="note">Har du ikke en bruger? Spørg Luke.</p>
+    </form>
+  </div>
+</section>
+
+<main id="app" hidden>
   <header>
     <div class="brand">
-      <img src="/logo.svg" alt="">
+      <img class="logo" src="logo.svg" alt="">
       <div>
         <h1>Outlandish Live</h1>
         <p>22.–26. oktober 2026</p>
       </div>
     </div>
-    <a class="logout" href="/logout">Log ud</a>
+    <button class="link" id="logout" type="button">Log ud</button>
   </header>
 
   <section>
@@ -76,12 +117,7 @@
 
   <section>
     <h2>Kontakt og praktisk</h2>
-    <div class="contact-name">Aslan, hovedkontakt</div>
-    <div class="contact-phone">+7 778 330 0003</div>
-    <div class="buttons">
-      <a href="tel:+77783300003">Ring</a>
-      <a class="secondary" href="https://wa.me/77783300003">WhatsApp</a>
-    </div>
+    <div id="contacts"></div>
 
     <h3>Ved ankomst</h3>
     <ul>
@@ -94,34 +130,10 @@
     </ul>
   </section>
 
-  <section>
-    <h2>Teknisk rider</h2>
-    <ul>
-      <li>2 × trådløse mikrofoner Shure UHF-R, UR2 BETA58A</li>
-      <li>4 × aktive monitorer, 2 på hver side af bordet</li>
-      <li>1 × Pioneer 4-kanals mixer</li>
-      <li>3 × CDJ 3000</li>
-      <li>1 × Power Core-kabel</li>
-      <li>1 × bord 90 × 200 × 60 cm (h × l × d)</li>
-      <li>Lokal lydtekniker til soundcheck og show. Outlandish har ingen egen lydmand med.</li>
-      <li>Lokal lystekniker under showet.</li>
-      <li>Alt indhold på LED-skærm, backdrop og bannere skal godkendes af Outlandish.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Hospitality rider</h2>
-    <ul>
-      <li>Mindst 1 aflåseligt, opvarmet omklædningsrum med toilet tæt på.</li>
-      <li>5 sorte håndklæder, strygebræt og strygejern, elkedel, helfigursspejl, 4 stikkontakter, wifi med kode.</li>
-      <li>Frugt, snacks og slik uden animalsk fedt, grøntsagsstave med dip og hummus, chips, proteinbarer og chokolade.</li>
-      <li>Te, citron, ingefær, honning, kaffe og mælk.</li>
-      <li>Køleskab med blandet sodavand (inkl. Cola Zero eller Pepsi Max) og rigeligt vand.</li>
-      <li>Dagpenge: 350 € pr. dag i 5 dage, udbetales i lufthavnen dag 1.</li>
-    </ul>
-  </section>
+  <div id="private-sections"></div>
 </main>
 
+<script src="vendor/supabase-js-2.45.4/supabase.js"></script>
 <script>
   // Tilføj åbne punkter her. Hvert punkt skal have et unikt id.
   const OPEN_ITEMS = [
@@ -152,6 +164,108 @@
     li.append(label);
     list.append(li);
   }
+
+  // Login via Supabase. Brugernavne omsættes til interne login-adresser (der sendes ingen mails).
+  // Kontakter, dagpenge og riders ligger i Supabase og kan kun læses af godkendte brugere (RLS).
+  const SUPABASE_URL = "https://bjdglyurrpdnjgyfopek.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_7rEkE6x7gwGbS1s5LU8o3A_vjhkk21T";
+  const EMAIL_DOMAIN = "outlandish-live.dk";
+
+  // "Husk mig": sessionen gemmes i localStorage, ellers kun til fanen lukkes.
+  const REMEMBER_KEY = "outlandish-remember";
+  const store = () => {
+    try { return localStorage.getItem(REMEMBER_KEY) === "0" ? sessionStorage : localStorage; }
+    catch (e) { return null; }
+  };
+  const authStorage = {
+    getItem: (k) => { try { return store()?.getItem(k) ?? null; } catch (e) { return null; } },
+    setItem: (k, v) => { try { store()?.setItem(k, v); } catch (e) {} },
+    removeItem: (k) => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} },
+  };
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+  });
+
+  const el = (id) => document.getElementById(id);
+  function make(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  function showLogin() {
+    el("app").hidden = true;
+    el("login").hidden = false;
+  }
+
+  async function showApp() {
+    el("login").hidden = true;
+    el("app").hidden = false;
+
+    const [contacts, sections] = await Promise.all([
+      db.from("contacts").select("name, role, phone").order("position"),
+      db.from("private_sections").select("title, items").order("position"),
+    ]);
+
+    const contactsEl = el("contacts");
+    contactsEl.replaceChildren();
+    if (contacts.error || sections.error) {
+      contactsEl.append(make("p", "Kunne ikke hente kontakter. Tjek forbindelsen og prøv igen.", "empty"));
+    }
+    for (const c of contacts.data || []) {
+      const box = make("div", null, "contact");
+      box.append(make("div", c.role ? `${c.name}, ${c.role}` : c.name, "contact-name"));
+      if (c.phone) {
+        const digits = c.phone.replace(/[^\d+]/g, "");
+        box.append(make("div", c.phone, "contact-phone"));
+        const buttons = make("div", null, "buttons");
+        const call = make("a", "Ring");
+        call.href = "tel:" + digits;
+        const wa = make("a", "WhatsApp", "secondary");
+        wa.href = "https://wa.me/" + digits.replace("+", "");
+        buttons.append(call, wa);
+        box.append(buttons);
+      }
+      contactsEl.append(box);
+    }
+
+    const sectionsEl = el("private-sections");
+    sectionsEl.replaceChildren();
+    for (const s of sections.data || []) {
+      const section = make("section");
+      section.append(make("h2", s.title));
+      const ul = make("ul");
+      for (const item of s.items) ul.append(make("li", item));
+      section.append(ul);
+      sectionsEl.append(section);
+    }
+  }
+
+  el("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = el("lUser").value.trim().toLowerCase();
+    const password = el("lPass").value;
+    el("lErr").textContent = "";
+    el("lLogin").disabled = true;
+    try { localStorage.setItem(REMEMBER_KEY, el("lRemember").checked ? "1" : "0"); } catch (e) {}
+    const { error } = await db.auth.signInWithPassword({ email: `${name}@${EMAIL_DOMAIN}`, password });
+    el("lLogin").disabled = false;
+    if (error) {
+      el("lErr").textContent = /invalid/i.test(error.message)
+        ? "Forkert brugernavn eller password"
+        : "Kunne ikke logge på – prøv igen";
+      return;
+    }
+    el("lPass").value = "";
+  });
+
+  el("logout").addEventListener("click", () => db.auth.signOut());
+
+  db.auth.onAuthStateChange((_event, session) => {
+    // Kør uden for callbacken, så supabase-js ikke låser sig selv.
+    setTimeout(() => (session ? showApp() : showLogin()), 0);
+  });
 </script>
 </body>
 </html>
