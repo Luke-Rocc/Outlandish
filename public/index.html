@@ -210,6 +210,7 @@ dialog h2{margin-bottom:12px}
     </section>
 
     <div id="private-sections"></div>
+    <button class="add" id="add-section" type="button" hidden>+ Tilføj afsnit</button>
   </div>
 </main>
 
@@ -338,14 +339,14 @@ dialog h2{margin-bottom:12px}
   }
 
   // ---------- data ----------
-  let schedule = [], flights = [], contacts = [], isAdmin = false;
+  let schedule = [], flights = [], contacts = [], sections = [], loadError = null, isAdmin = false;
   const DAY_KEY = "outlandish-day", TAB_KEY = "outlandish-tab";
   let currentDay = DAYS[0];
 
   async function loadData() {
     const [c, s, p, f, a] = await Promise.all([
       db.from("contacts").select("id, name, role, phone").order("position"),
-      db.from("private_sections").select("title, items").order("position"),
+      db.from("private_sections").select("slug, title, items").order("position"),
       db.from("schedule_items").select("id, day, time, title, details").order("day").order("position"),
       db.from("flights")
         .select("id, day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
@@ -356,16 +357,18 @@ dialog h2{margin-bottom:12px}
     schedule = p.data || [];
     flights = f.data || [];
     isAdmin = a.data === true;
-    renderSections(s.data || [], c.error || s.error || p.error || f.error);
+    sections = s.data || [];
+    loadError = c.error || s.error || p.error || f.error;
     renderAll();
   }
 
   function renderAll() {
-    for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact"]) el(id).hidden = !isAdmin;
+    for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact", "add-section"]) el(id).hidden = !isAdmin;
     renderDays();
     renderNext();
     renderAllFlights();
     renderContacts();
+    renderSections();
   }
 
   // ---------- nu og næste ----------
@@ -530,16 +533,22 @@ dialog h2{margin-bottom:12px}
     }
   }
 
-  function renderSections(sections, error) {
+  function renderSections() {
     const box = el("private-sections");
     box.replaceChildren();
-    if (error) box.append(make("p", "Kunne ikke hente alle oplysninger. Tjek forbindelsen og prøv igen.", "empty"));
+    if (loadError) box.append(make("p", "Kunne ikke hente alle oplysninger. Tjek forbindelsen og prøv igen.", "empty"));
     for (const s of sections) {
       const section = make("section");
       section.append(make("h2", s.title));
       const ul = make("ul");
       for (const item of s.items) ul.append(make("li", item));
       section.append(ul);
+      if (isAdmin) {
+        const edit = make("button", "Ret afsnit", "link");
+        edit.type = "button";
+        edit.onclick = () => editSection(s);
+        section.append(edit);
+      }
       box.append(section);
     }
   }
@@ -671,6 +680,23 @@ dialog h2{margin-bottom:12px}
     requireFields("name");
   }
 
+  const SECTION_FIELDS = [
+    ["title", "Overskrift", "text"],
+    ["items", "Punkter", "textarea", "Ét punkt pr. linje."],
+  ];
+  function editSection(s) {
+    const table = db.from("private_sections");
+    const toRow = (v) => ({ title: v.title, items: (v.items || "").split("\n").map((x) => x.trim()).filter(Boolean) });
+    openEditor(s ? "Ret afsnit" : "Nyt afsnit", SECTION_FIELDS, s ? { title: s.title, items: s.items.join("\n") } : {},
+      (v) => s
+        ? table.update(toRow(v)).eq("slug", s.slug)
+        : table.insert({ ...toRow(v), slug: "afsnit-" + Date.now(), position: sections.length + 1 }),
+      s && (() => table.delete().eq("slug", s.slug)));
+    requireFields("title");
+    el("e-items").rows = 8;
+  }
+
+  el("add-section").onclick = () => editSection(null);
   el("add-item").onclick = () => editItem(null);
   el("add-flight").onclick = () => editFlight(null);
   el("add-flight-day").onclick = () => editFlight(null);
