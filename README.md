@@ -62,6 +62,13 @@ insert into public.flights (day, position, flight_no, from_place, to_place, depa
 values ('2026-10-22', 1, 'TK 1786', 'København', 'Istanbul', '10:05', '15:20', 'ABC123', 'Alle', 'Terminal 3');
 ```
 
+### Check-in-hjælp
+
+Tryk på et fly for at vælge **Check-in-hjælp** eller **Rediger fly** (kun admins). Check-in-hjælpen viser
+bookingnummer, flynummer og ens egen billet (billetnummer, navn, pas, sæde) med kopiér-knapper, og en knap
+til flyselskabets online check-in. Billetter ligger i `public.flight_tickets`: hver bruger ser kun sine egne,
+admins ser og retter alle (via "+ Tilføj billet" i check-in-hjælpen).
+
 ## Sikkerhed
 
 `public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet.

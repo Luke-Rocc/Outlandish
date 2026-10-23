@@ -133,6 +133,18 @@ li{margin:4px 0}
 .checklist input{margin-top:4px;width:18px;height:18px;accent-color:var(--gold)}
 .checklist input:checked + span{color:var(--muted);text-decoration:line-through}
 
+/* fly-menu og check-in-hjælp */
+.menu{display:grid;gap:10px}
+.menu .btn{margin-top:0}
+.ci-head{color:var(--muted);margin:-6px 0 10px}
+.ci-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ci-row .k{font-size:13px;color:var(--muted)}
+.ci-row .v{font-weight:600;font-size:17px;word-break:break-all;font-variant-numeric:tabular-nums}
+.copy{border:1px solid var(--gold);background:none;color:var(--gold);border-radius:9px;padding:7px 12px;font-weight:600;cursor:pointer;min-width:84px}
+.copy.done{background:var(--gold);color:var(--on-gold)}
+.ci-person{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-top:16px}
+.ci-link{display:block;text-align:center;text-decoration:none;margin-top:14px}
+
 /* rediger-dialog */
 dialog{border:0;border-radius:16px;background:var(--surface);color:var(--ink);width:min(92vw,480px);padding:18px;max-height:88vh;overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -240,6 +252,22 @@ dialog h2{margin-bottom:12px}
   <button type="button" role="tab" data-tab="kontakter" aria-selected="false">Kontakter</button>
   <button type="button" role="tab" data-tab="info" aria-selected="false">Info</button>
 </nav>
+
+<dialog id="flightMenu">
+  <h2 id="fmTitle"></h2>
+  <div class="menu">
+    <button class="btn" id="fmCheckin" type="button">Check-in-hjælp</button>
+    <button class="btn ghost" id="fmEdit" type="button">Rediger fly</button>
+    <button class="btn ghost" id="fmClose" type="button">Luk</button>
+  </div>
+</dialog>
+
+<dialog id="checkin">
+  <h2 id="ciTitle"></h2>
+  <p class="ci-head" id="ciSub"></p>
+  <div id="ciBody"></div>
+  <button class="btn ghost" id="ciClose" type="button">Luk</button>
+</dialog>
 
 <dialog id="editor">
   <form id="editForm" method="dialog">
@@ -369,7 +397,7 @@ dialog h2{margin-bottom:12px}
       db.from("private_sections").select("slug, title, items").order("position"),
       db.from("schedule_items").select("id, day, time, title, details").order("day").order("position"),
       db.from("flights")
-        .select("id, day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
+        .select("id, day, flight_no, airline, from_place, to_place, departs, arrives, booking_ref, passengers, notes, checkin_url")
         .order("day").order("position"),
       db.from("hotels")
         .select("id, city, name, address, check_in, check_out, phone, booking_ref, link, notes")
@@ -514,10 +542,8 @@ dialog h2{margin-bottom:12px}
       f.notes,
     ].filter(Boolean);
     for (const m of meta) card.append(make("div", m, "flight-meta"));
-    if (isAdmin) {
-      card.classList.add("editable");
-      card.onclick = () => editFlight(f);
-    }
+    card.classList.add("editable");
+    card.onclick = () => openFlightMenu(f);
     return card;
   }
 
@@ -737,8 +763,10 @@ dialog h2{margin-bottom:12px}
     ["to_place", "Til", "text"],
     ["departs", "Afgang", "text", "Fx 14:55 DK. Uden zone betyder lokal tid (GMT+5)."],
     ["arrives", "Ankomst", "text", "Fx 19:15 TR."],
-    ["flight_no", "Flynummer", "text"],
+    ["flight_no", "Flynummer", "text", "Fx KC 124."],
+    ["airline", "Flyselskab", "text", "Fx Air Astana."],
     ["booking_ref", "Bookingnummer", "text"],
+    ["checkin_url", "Link til online check-in", "text", "Fx https://airastana.com"],
     ["passengers", "Hvem er med", "text"],
     ["notes", "Noter", "textarea", "Fx check-in, afgang fra hotel, terminal."],
   ];
@@ -748,6 +776,122 @@ dialog h2{margin-bottom:12px}
       (v) => f ? table.update(v).eq("id", f.id) : table.insert(v),
       f && (() => table.delete().eq("id", f.id)));
     requireFields("from_place", "to_place");
+  }
+
+  // ---------- fly-menu og check-in-hjælp ----------
+  function openFlightMenu(f) {
+    el("fmTitle").textContent = `✈ ${f.from_place} → ${f.to_place}`;
+    el("fmEdit").hidden = !isAdmin;
+    el("fmCheckin").onclick = () => { el("flightMenu").close(); openCheckin(f); };
+    el("fmEdit").onclick = () => { el("flightMenu").close(); editFlight(f); };
+    el("flightMenu").showModal();
+  }
+  el("fmClose").onclick = () => el("flightMenu").close();
+  el("ciClose").onclick = () => el("checkin").close();
+
+  async function copyText(text, button) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const t = make("textarea");
+      t.value = text;
+      document.body.append(t);
+      t.select();
+      document.execCommand("copy");
+      t.remove();
+    }
+    button.textContent = "Kopieret";
+    button.classList.add("done");
+    setTimeout(() => { button.textContent = "Kopiér"; button.classList.remove("done"); }, 1500);
+  }
+
+  function copyRow(label, value) {
+    const row = make("div", null, "ci-row");
+    const text = make("div");
+    text.append(make("div", label, "k"), make("div", value, "v"));
+    const b = make("button", "Kopiér", "copy");
+    b.type = "button";
+    b.onclick = () => copyText(value, b);
+    row.append(text, b);
+    return row;
+  }
+
+  const TICKET_ROWS = [
+    ["ticket_no", "Billetnummer"],
+    ["last_name", "Efternavn"],
+    ["first_name", "Fornavn"],
+    ["passport_no", "Pasnummer"],
+    ["seat", "Sæde"],
+    ["baggage", "Bagage"],
+  ];
+
+  async function openCheckin(f) {
+    el("ciTitle").textContent = `✈ ${f.from_place} → ${f.to_place}`;
+    el("ciSub").textContent = [dayLabel(f.day), f.departs && `afgang ${f.departs}`, f.airline].filter(Boolean).join(" · ");
+    const body = el("ciBody");
+    body.replaceChildren(make("p", "Henter…", "empty"));
+    if (!el("checkin").open) el("checkin").showModal();
+
+    // RLS: almindelige brugere får kun deres egen billet, admins får alle.
+    const { data, error } = await db.from("flight_tickets")
+      .select("id, username, last_name, first_name, ticket_no, passport_no, seat, baggage, notes")
+      .eq("flight_id", f.id).order("username");
+    body.replaceChildren();
+    if (f.booking_ref) body.append(copyRow("Bookingnummer", f.booking_ref));
+    if (f.flight_no) body.append(copyRow("Flynummer", f.flight_no));
+
+    const tickets = data || [];
+    if (error) body.append(make("p", "Kunne ikke hente billetter – prøv igen.", "empty"));
+    else if (!tickets.length) body.append(make("p", "Din billet er ikke lagt ind endnu. Spørg Luke.", "empty mt"));
+    for (const t of tickets) {
+      if (isAdmin) body.append(make("div", capital(t.username), "ci-person"));
+      for (const [key, label] of TICKET_ROWS) if (t[key]) body.append(copyRow(label, t[key]));
+      if (t.notes) body.append(make("p", t.notes, "flight-meta"));
+      if (isAdmin) {
+        const edit = make("button", `Ret billet (${t.username})`, "link");
+        edit.type = "button";
+        edit.onclick = () => editTicket(f, t);
+        body.append(edit);
+      }
+    }
+    if (f.checkin_url && /^https:\/\//.test(f.checkin_url)) {
+      const a = make("a", "Åbn online check-in", "btn ci-link");
+      a.href = f.checkin_url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      body.append(a);
+    }
+    if (isAdmin) {
+      const add = make("button", "+ Tilføj billet", "add");
+      add.type = "button";
+      add.onclick = () => editTicket(f, null);
+      body.append(add);
+    }
+  }
+
+  const TICKET_FIELDS = [
+    ["username", "Bruger", "text", "Brugernavnet i appen, fx lenny. Kun den bruger (og admins) kan se billetten."],
+    ["last_name", "Efternavn (som på billetten)", "text"],
+    ["first_name", "Fornavn", "text"],
+    ["ticket_no", "Billetnummer", "text"],
+    ["passport_no", "Pasnummer", "text"],
+    ["seat", "Sæde", "text"],
+    ["baggage", "Bagage", "text"],
+    ["notes", "Noter", "textarea"],
+  ];
+  function editTicket(f, t) {
+    const table = db.from("flight_tickets");
+    const reopen = async (request) => {
+      const result = await request;
+      if (!result.error) setTimeout(() => openCheckin(f), 0);
+      return result;
+    };
+    openEditor(t ? "Ret billet" : "Ny billet", TICKET_FIELDS, t || {},
+      (v) => reopen(t
+        ? table.update({ ...v, username: (v.username || "").toLowerCase() }).eq("id", t.id)
+        : table.insert({ ...v, username: (v.username || "").toLowerCase(), flight_id: f.id })),
+      t && (() => reopen(table.delete().eq("id", t.id))));
+    requireFields("username");
   }
 
   const CONTACT_FIELDS = [
