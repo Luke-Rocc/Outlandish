@@ -29,7 +29,7 @@ insert into private.allowed_emails (email) values ('navn@outlandish-live.dk');
 
 ## Appen
 
-Fem faner nederst: **Program** (med "Næste" øverst og dagvælger), **Fly**, **Hotel**, **Kontakter** og **Info**. Hoteller ligger i `public.hotels`, og dagens hotel vises også under hver dag.
+Øverst står hvor I er lige nu (ud fra sidste landede fly), lokal tid og dansk tid, og vejret fra Open-Meteo (gratis, ingen nøgle, kun byens koordinater sendes). Fem faner nederst: **Program** (med "Næste" øverst og dagvælger), **Fly**, **Hotel**, **Kontakter** og **Info**. Hoteller ligger i `public.hotels`, og dagens hotel vises også under hver dag.
 
 **Admins kan rette direkte i appen:** tryk på et programpunkt, et fly eller "Ret kontakt", eller brug
 "+ Tilføj". Riders og dagpenge (fanen Info) rettes med "Ret afsnit", ét punkt pr. linje. Admins står i `private.admins` (lige nu `luke@outlandish-live.dk`). Andre brugere kan kun læse.
@@ -71,5 +71,5 @@ admins ser og retter alle (via "+ Tilføj billet" i check-in-hjælpen).
 
 ## Sikkerhed
 
-`public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet.
+`public/_headers` sætter sikkerheds-headers. Siden må kun køre sine egne scripts og kun tale med Supabase-projektet og Open-Meteo (vejret).
 Supabase-biblioteket ligger i `public/vendor/`.

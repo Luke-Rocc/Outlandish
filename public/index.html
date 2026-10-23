@@ -74,6 +74,15 @@ li{margin:4px 0}
 .add{display:block;width:100%;margin-top:12px;border:1px dashed var(--line);background:none;border-radius:10px;padding:10px;color:var(--gold);font-weight:600;cursor:pointer}
 .editable{cursor:pointer}
 
+/* infofelt øverst: hvor er vi, klokken og vejret */
+.now{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:14px}
+.now .city{font-weight:700;font-size:18px}
+.now .clock{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.now .wx{text-align:right;grid-row:span 2}
+.now .temp{font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.now .temp span{font-size:24px;margin-right:4px}
+.now .wx-sub{color:var(--muted);font-size:13px;margin-top:2px}
+
 /* faner nederst, som i AURUM */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabs button{flex:1;max-width:140px;border:0;background:none;padding:12px 2px 14px;font-weight:600;font-size:min(15px,3.7vw);color:var(--muted);cursor:pointer;border-top:3px solid transparent}
@@ -184,6 +193,12 @@ dialog h2{margin-bottom:12px}
     </div>
     <button class="link" id="logout" type="button">Log ud</button>
   </header>
+
+  <div class="now" id="now" hidden>
+    <div class="city" id="nowCity"></div>
+    <div class="wx" id="nowWx"></div>
+    <div class="clock" id="nowClock"></div>
+  </div>
 
   <div id="tab-program" role="tabpanel">
     <section class="next" id="next" aria-live="polite"></section>
@@ -418,6 +433,7 @@ dialog h2{margin-bottom:12px}
     for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact", "add-section", "add-hotel"]) el(id).hidden = !isAdmin;
     renderDays();
     renderNext();
+    renderNow();
     renderAllFlights();
     renderContacts();
     renderHotels();
@@ -463,7 +479,84 @@ dialog h2{margin-bottom:12px}
     box.classList.add("editable");
     box.onclick = () => selectDay(next.day);
   }
-  setInterval(() => { if (!el("app").hidden) renderNext(); }, 30000);
+  setInterval(() => { if (!el("app").hidden) { renderNext(); renderNow(); } }, 30000);
+
+  // ---------- hvor er vi, klokken og vejret ----------
+  // Byen regnes ud fra det sidste fly, der er landet. Vejret kommer fra Open-Meteo (ingen persondata).
+  const PLACES = {
+    "København": { lat: 55.676, lon: 12.568, tz: "Europe/Copenhagen" },
+    "Istanbul": { lat: 41.01, lon: 28.98, tz: "Europe/Istanbul" },
+    "Tashkent": { lat: 41.30, lon: 69.24, tz: "Asia/Tashkent" },
+    "Astana": { lat: 51.17, lon: 71.45, tz: "Asia/Almaty" },
+    "Almaty": { lat: 43.24, lon: 76.89, tz: "Asia/Almaty" },
+  };
+  const WEATHER = [
+    [[0], "☀️", "klart"], [[1, 2], "🌤️", "let skyet"], [[3], "☁️", "overskyet"], [[45, 48], "🌫️", "tåge"],
+    [[51, 53, 55, 56, 57], "🌦️", "støvregn"], [[61, 63, 65, 66, 67, 80, 81, 82], "🌧️", "regn"],
+    [[71, 73, 75, 77, 85, 86], "🌨️", "sne"], [[95, 96, 99], "⛈️", "torden"],
+  ];
+  const describe = (code) => WEATHER.find(([codes]) => codes.includes(code)) || [[], "🌡️", ""];
+  const weatherCache = {};
+
+  function currentPlace() {
+    const now = Date.now();
+    let place = "København";
+    const landed = flights
+      .map((f) => {
+        const dep = instant(f.day, f.departs);
+        let arr = instant(f.day, f.arrives);
+        if (dep && arr && arr < dep) arr = new Date(arr.getTime() + 864e5); // lander næste dag
+        return { to: f.to_place, arr };
+      })
+      .filter((x) => x.arr && x.arr <= now)
+      .sort((a, b) => a.arr - b.arr);
+    if (landed.length) place = landed[landed.length - 1].to;
+    return PLACES[place] ? place : "København";
+  }
+
+  const clockIn = (tz) => new Intl.DateTimeFormat("da-DK", { timeZone: tz, hour: "2-digit", minute: "2-digit" }).format(new Date());
+
+  function renderNow() {
+    const name = currentPlace();
+    const p = PLACES[name];
+    el("now").hidden = false;
+    el("nowCity").textContent = name;
+    el("nowClock").textContent = p.tz === "Europe/Copenhagen"
+      ? `Klokken er ${clockIn(p.tz)}`
+      : `Kl. ${clockIn(p.tz)} lokal · ${clockIn("Europe/Copenhagen")} i DK`;
+    loadWeather(name);
+  }
+
+  async function loadWeather(name) {
+    const cached = weatherCache[name];
+    if (cached && Date.now() - cached.at < 15 * 60e3) return showWeather(cached.data);
+    const p = PLACES[name];
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
+        "&current=temperature_2m,weather_code,wind_speed_10m" +
+        "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      weatherCache[name] = { at: Date.now(), data };
+      if (currentPlace() === name) showWeather(data);
+    } catch (e) {
+      el("nowWx").replaceChildren(make("div", "Vejret kan ikke hentes", "wx-sub"));
+    }
+  }
+
+  function showWeather(data) {
+    const c = data.current || {}, d = data.daily || {};
+    const [, icon, text] = describe(c.weather_code);
+    const temp = make("div", null, "temp");
+    temp.append(make("span", icon), `${Math.round(c.temperature_2m)}°`);
+    const parts = [
+      d.temperature_2m_min && `${Math.round(d.temperature_2m_min[0])}–${Math.round(d.temperature_2m_max[0])}°`,
+      text,
+      d.precipitation_probability_max && d.precipitation_probability_max[0] != null && `${d.precipitation_probability_max[0]} % regn`,
+    ].filter(Boolean);
+    el("nowWx").replaceChildren(temp, make("div", parts.join(" · "), "wx-sub"));
+  }
 
   // ---------- dage og program ----------
   function renderDays() {
