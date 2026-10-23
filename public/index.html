@@ -76,7 +76,7 @@ li{margin:4px 0}
 
 /* faner nederst, som i AURUM */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabs button{flex:1;max-width:160px;border:0;background:none;padding:12px 2px 14px;font-weight:600;font-size:15px;color:var(--muted);cursor:pointer;border-top:3px solid transparent}
+.tabs button{flex:1;max-width:140px;border:0;background:none;padding:12px 2px 14px;font-weight:600;font-size:min(15px,3.7vw);color:var(--muted);cursor:pointer;border-top:3px solid transparent}
 .tabs button[aria-selected="true"]{color:var(--ink);border-top-color:var(--gold)}
 
 /* nu og næste */
@@ -109,6 +109,16 @@ li{margin:4px 0}
 .flight-times span{color:var(--muted);font-size:16px;font-weight:400}
 .flight-meta{color:var(--muted);font-size:14px;margin-top:4px}
 .flight-day{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+
+/* hoteller */
+.hotel{padding:4px 0}
+.hotel + .hotel{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.hotel-city{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.hotel-name{font-weight:700;font-size:18px}
+.hotel-dates{color:var(--muted);font-size:15px}
+.hotel-meta{color:var(--muted);font-size:14px;margin-top:4px}
+.tonight{display:flex;gap:8px;align-items:baseline;color:var(--muted);font-size:15px;margin:2px 0 6px}
+.tonight b{color:var(--ink);font-weight:600}
 
 /* kontakter og info */
 .contact{padding:4px 0}
@@ -168,6 +178,7 @@ dialog h2{margin-bottom:12px}
     <nav class="days" id="days" aria-label="Vælg dag"></nav>
     <section>
       <h2 id="day-title">Program</h2>
+      <div class="tonight" id="tonight" hidden></div>
       <ul class="program" id="program"></ul>
       <button class="add" id="add-item" type="button" hidden>+ Tilføj programpunkt</button>
       <button class="add" id="add-flight-day" type="button" hidden>+ Tilføj fly</button>
@@ -179,6 +190,14 @@ dialog h2{margin-bottom:12px}
       <h2>Alle fly</h2>
       <div id="all-flights"></div>
       <button class="add" id="add-flight" type="button" hidden>+ Tilføj fly</button>
+    </section>
+  </div>
+
+  <div id="tab-hotel" role="tabpanel" hidden>
+    <section>
+      <h2>Hoteller</h2>
+      <div id="hotels"></div>
+      <button class="add" id="add-hotel" type="button" hidden>+ Tilføj hotel</button>
     </section>
   </div>
 
@@ -217,6 +236,7 @@ dialog h2{margin-bottom:12px}
 <nav class="tabs" id="tabs" role="tablist" hidden>
   <button type="button" role="tab" data-tab="program" aria-selected="true">Program</button>
   <button type="button" role="tab" data-tab="fly" aria-selected="false">Fly</button>
+  <button type="button" role="tab" data-tab="hotel" aria-selected="false">Hotel</button>
   <button type="button" role="tab" data-tab="kontakter" aria-selected="false">Kontakter</button>
   <button type="button" role="tab" data-tab="info" aria-selected="false">Info</button>
 </nav>
@@ -339,35 +359,40 @@ dialog h2{margin-bottom:12px}
   }
 
   // ---------- data ----------
-  let schedule = [], flights = [], contacts = [], sections = [], loadError = null, isAdmin = false;
+  let schedule = [], flights = [], contacts = [], sections = [], hotels = [], loadError = null, isAdmin = false;
   const DAY_KEY = "outlandish-day", TAB_KEY = "outlandish-tab";
   let currentDay = DAYS[0];
 
   async function loadData() {
-    const [c, s, p, f, a] = await Promise.all([
+    const [c, s, p, f, h, a] = await Promise.all([
       db.from("contacts").select("id, name, role, phone").order("position"),
       db.from("private_sections").select("slug, title, items").order("position"),
       db.from("schedule_items").select("id, day, time, title, details").order("day").order("position"),
       db.from("flights")
         .select("id, day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
         .order("day").order("position"),
+      db.from("hotels")
+        .select("id, city, name, address, check_in, check_out, phone, booking_ref, notes")
+        .order("check_in"),
       db.rpc("am_i_admin"),
     ]);
     contacts = c.data || [];
     schedule = p.data || [];
     flights = f.data || [];
+    hotels = h.data || [];
     isAdmin = a.data === true;
     sections = s.data || [];
-    loadError = c.error || s.error || p.error || f.error;
+    loadError = c.error || s.error || p.error || f.error || h.error;
     renderAll();
   }
 
   function renderAll() {
-    for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact", "add-section"]) el(id).hidden = !isAdmin;
+    for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact", "add-section", "add-hotel"]) el(id).hidden = !isAdmin;
     renderDays();
     renderNext();
     renderAllFlights();
     renderContacts();
+    renderHotels();
     renderSections();
   }
 
@@ -438,6 +463,10 @@ dialog h2{margin-bottom:12px}
     if (switchTab) selectTab("program");
     for (const b of el("days").children) b.setAttribute("aria-pressed", String(b.dataset.day === iso));
     el("day-title").textContent = dayLabel(iso);
+    const stay = hotelFor(iso);
+    el("tonight").hidden = !stay;
+    el("tonight").replaceChildren();
+    if (stay) el("tonight").append("Hotel i nat:", make("b", stay.name), stay.city ? `· ${stay.city}` : "");
 
     // Fly og programpunkter i tidsrækkefølge; punkter uden tid først.
     const entries = [
@@ -504,6 +533,48 @@ dialog h2{margin-bottom:12px}
     }
   }
 
+  // ---------- hoteller ----------
+  const hotelFor = (iso) => hotels.find((h) => h.check_in <= iso && iso < h.check_out);
+  const shortDate = (iso) => { const d = localDate(iso); return `${WEEKDAYS[d.getDay()].slice(0, 3)} ${d.getDate()}/${d.getMonth() + 1}`; };
+
+  function renderHotels() {
+    const box = el("hotels");
+    box.replaceChildren();
+    if (!hotels.length) box.append(make("p", "Ingen hoteller endnu.", "empty"));
+    for (const h of hotels) {
+      const div = make("div", null, "hotel");
+      if (h.city) div.append(make("div", h.city, "hotel-city"));
+      div.append(make("div", h.name, "hotel-name"));
+      div.append(make("div", `Check-in ${shortDate(h.check_in)} · check-ud ${shortDate(h.check_out)}`, "hotel-dates"));
+      if (h.address) div.append(make("div", h.address, "hotel-meta"));
+      for (const m of [h.booking_ref && `Booking: ${h.booking_ref}`, h.notes].filter(Boolean)) {
+        div.append(make("div", m, "hotel-meta"));
+      }
+      const buttons = make("div", null, "buttons");
+      if (h.address || h.name) {
+        const map = make("a", "Kort");
+        map.href = "https://www.google.com/maps/search/?api=1&query=" +
+          encodeURIComponent([h.name, h.address, h.city].filter(Boolean).join(", "));
+        map.target = "_blank";
+        map.rel = "noopener";
+        buttons.append(map);
+      }
+      if (h.phone) {
+        const call = make("a", "Ring", "secondary");
+        call.href = "tel:" + h.phone.replace(/[^\d+]/g, "");
+        buttons.append(call);
+      }
+      if (buttons.children.length) div.append(buttons);
+      if (isAdmin) {
+        const edit = make("button", "Ret hotel", "link");
+        edit.type = "button";
+        edit.onclick = () => editHotel(h);
+        div.append(edit);
+      }
+      box.append(div);
+    }
+  }
+
   // ---------- kontakter og info ----------
   function renderContacts() {
     const box = el("contacts");
@@ -554,10 +625,11 @@ dialog h2{margin-bottom:12px}
   }
 
   // ---------- faner ----------
+  const TABS = ["program", "fly", "hotel", "kontakter", "info"];
   function selectTab(name) {
     try { sessionStorage.setItem(TAB_KEY, name); } catch (e) {}
     for (const b of el("tabs").children) b.setAttribute("aria-selected", String(b.dataset.tab === name));
-    for (const t of ["program", "fly", "kontakter", "info"]) el("tab-" + t).hidden = t !== name;
+    for (const t of TABS) el("tab-" + t).hidden = t !== name;
   }
   for (const b of el("tabs").children) b.addEventListener("click", () => { selectTab(b.dataset.tab); scrollTo(0, 0); });
 
@@ -580,6 +652,9 @@ dialog h2{margin-bottom:12px}
           o.value = d;
           input.append(o);
         }
+      } else if (type === "date") {
+        input = make("input", null, "field");
+        input.type = "date";
       } else if (type === "textarea") {
         input = make("textarea", null, "field");
       } else {
@@ -696,6 +771,25 @@ dialog h2{margin-bottom:12px}
     el("e-items").rows = 8;
   }
 
+  const HOTEL_FIELDS = [
+    ["city", "By", "text"],
+    ["name", "Hotel", "text"],
+    ["check_in", "Check-in", "date"],
+    ["check_out", "Check-ud", "date"],
+    ["address", "Adresse", "text"],
+    ["phone", "Telefon", "text"],
+    ["booking_ref", "Bookingnummer", "text"],
+    ["notes", "Noter", "textarea", "Fx værelser, morgenmad, wifi."],
+  ];
+  function editHotel(h) {
+    const table = db.from("hotels");
+    openEditor(h ? "Ret hotel" : "Nyt hotel", HOTEL_FIELDS, h || { check_in: currentDay },
+      (v) => h ? table.update(v).eq("id", h.id) : table.insert(v),
+      h && (() => table.delete().eq("id", h.id)));
+    requireFields("name", "check_in", "check_out");
+  }
+
+  el("add-hotel").onclick = () => editHotel(null);
   el("add-section").onclick = () => editSection(null);
   el("add-item").onclick = () => editItem(null);
   el("add-flight").onclick = () => editFlight(null);
@@ -721,7 +815,7 @@ dialog h2{margin-bottom:12px}
     el("tabs").hidden = false;
     let tab = null;
     try { tab = sessionStorage.getItem(TAB_KEY); } catch (e) {}
-    selectTab(["program", "fly", "kontakter", "info"].includes(tab) ? tab : "program");
+    selectTab(TABS.includes(tab) ? tab : "program");
     renderAll();
     await loadData();
   }

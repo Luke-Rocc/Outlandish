@@ -29,7 +29,7 @@ insert into private.allowed_emails (email) values ('navn@outlandish-live.dk');
 
 ## Appen
 
-Fire faner nederst: **Program** (med "Næste" øverst og dagvælger), **Fly**, **Kontakter** og **Info**.
+Fem faner nederst: **Program** (med "Næste" øverst og dagvælger), **Fly**, **Hotel**, **Kontakter** og **Info**. Hoteller ligger i `public.hotels`, og dagens hotel vises også under hver dag.
 
 **Admins kan rette direkte i appen:** tryk på et programpunkt, et fly eller "Ret kontakt", eller brug
 "+ Tilføj". Riders og dagpenge (fanen Info) rettes med "Ret afsnit", ét punkt pr. linje. Admins står i `private.admins` (lige nu `luke@outlandish-live.dk`). Andre brugere kan kun læse.
