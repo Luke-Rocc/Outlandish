@@ -372,7 +372,7 @@ dialog h2{margin-bottom:12px}
         .select("id, day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
         .order("day").order("position"),
       db.from("hotels")
-        .select("id, city, name, address, check_in, check_out, phone, booking_ref, notes")
+        .select("id, city, name, address, check_in, check_out, phone, booking_ref, link, notes")
         .order("check_in"),
       db.rpc("am_i_admin"),
     ]);
@@ -551,12 +551,20 @@ dialog h2{margin-bottom:12px}
         div.append(make("div", m, "hotel-meta"));
       }
       const buttons = make("div", null, "buttons");
-      if (h.address || h.name) {
+      if (h.link && /^https:\/\//.test(h.link)) {
+        const booking = make("a", "Booking");
+        booking.href = h.link;
+        booking.target = "_blank";
+        booking.rel = "noopener";
+        buttons.append(booking);
+      }
+      if (h.address) {
         const map = make("a", "Kort");
         map.href = "https://www.google.com/maps/search/?api=1&query=" +
           encodeURIComponent([h.name, h.address, h.city].filter(Boolean).join(", "));
         map.target = "_blank";
         map.rel = "noopener";
+        if (buttons.children.length) map.className = "secondary";
         buttons.append(map);
       }
       if (h.phone) {
@@ -779,6 +787,7 @@ dialog h2{margin-bottom:12px}
     ["address", "Adresse", "text"],
     ["phone", "Telefon", "text"],
     ["booking_ref", "Bookingnummer", "text"],
+    ["link", "Link til booking", "text", "Fx et Booking.com-link."],
     ["notes", "Noter", "textarea", "Fx værelser, morgenmad, wifi."],
   ];
   function editHotel(h) {
