@@ -14,19 +14,19 @@
 <style>
 :root{
   --bg:#E7E8E4; --surface:#FFFFFF; --ink:#1E2A34; --muted:#66727C; --line:#D3D6D1;
-  --gold:#A87C22; --on-gold:#FFFFFF; --danger:#B3261E; --field:#F5F6F3;
+  --gold:#A87C22; --gold-soft:#F3E7C9; --on-gold:#FFFFFF; --danger:#B3261E; --field:#F5F6F3;
 }
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#141A1F; --surface:#1D252C; --ink:#E8EAE6; --muted:#98A2AA; --line:#2E3942;
-    --gold:#D4A94B; --on-gold:#1A1406; --danger:#F2867E; --field:#172027;
+    --gold:#D4A94B; --gold-soft:#3A3120; --on-gold:#1A1406; --danger:#F2867E; --field:#172027;
   }
   .logo{filter:invert(1)}
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-button,input{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
 
 /* login */
@@ -40,11 +40,14 @@ label.f{display:block;font-size:14px;color:var(--muted);margin:0 0 4px}
 .mt{margin-top:12px}
 .field{width:100%;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px}
 .field:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+textarea.field{min-height:80px;resize:vertical}
 .remember{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:15px;cursor:pointer}
 .remember input{width:22px;height:22px;accent-color:var(--gold);margin:0}
 .err{color:var(--danger);font-size:14px;min-height:20px;margin:8px 0 0}
 .btn{border:0;border-radius:12px;padding:14px 18px;font-weight:600;font-size:16px;cursor:pointer;min-height:50px;margin-top:14px;background:var(--gold);color:var(--on-gold);width:100%}
 .btn:disabled{opacity:.6}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:none;color:var(--danger);border:1px solid var(--line)}
 .note{font-size:13px;color:var(--muted);margin:10px 0 0;text-align:center}
 /* intro som i AURUM: logoet zoomer ind på plads, så glider login-felterne frem */
 .login-head .logo{animation:introIn 1.1s cubic-bezier(.16,1,.3,1) both}
@@ -53,21 +56,63 @@ label.f{display:block;font-size:14px;color:var(--muted);margin:0 0 4px}
 @keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.login-head .logo,.login-head .sub,#loginForm{animation:none}}
 
-/* siden */
-main{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+/* app */
+main{max-width:640px;margin:0 auto;padding:18px 16px calc(96px + env(safe-area-inset-bottom,0px))}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .brand{display:flex;align-items:center;gap:12px}
-.brand .logo{width:56px;height:56px;flex:none}
-header h1{margin:0;font-size:26px;letter-spacing:-.01em;line-height:1.15}
-header p{margin:2px 0 0;color:var(--muted)}
+.brand .logo{width:48px;height:48px;flex:none}
+header h1{margin:0;font-size:24px;letter-spacing:-.01em;line-height:1.15}
+header p{margin:2px 0 0;color:var(--muted);font-size:15px}
 .link{border:0;background:none;color:var(--gold);font-weight:600;padding:6px 0;cursor:pointer;white-space:nowrap}
-main section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+main section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
 h2{margin:0 0 4px;font-size:19px}
 h3{margin:18px 0 6px;font-size:16px}
 main .note{margin:0 0 12px;font-size:14px;text-align:left}
 ul{margin:0;padding-left:20px}
 li{margin:4px 0}
-.contact + .contact{margin-top:16px}
+.empty{color:var(--muted);font-style:italic}
+.add{display:block;width:100%;margin-top:12px;border:1px dashed var(--line);background:none;border-radius:10px;padding:10px;color:var(--gold);font-weight:600;cursor:pointer}
+.editable{cursor:pointer}
+
+/* faner nederst, som i AURUM */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;max-width:160px;border:0;background:none;padding:12px 2px 14px;font-weight:600;font-size:15px;color:var(--muted);cursor:pointer;border-top:3px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--ink);border-top-color:var(--gold)}
+
+/* nu og næste */
+.next{background:var(--gold-soft);border-color:transparent}
+.next .label{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.next .what{font-size:21px;font-weight:700;margin-top:2px;line-height:1.25}
+.next .when{color:var(--muted);margin-top:2px}
+.next .then{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:15px;color:var(--muted)}
+.next .then b{color:var(--ink);font-weight:600}
+
+/* dage og program */
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:16px}
+.days button{border:0;background:none;border-radius:9px;padding:8px 2px;cursor:pointer;color:var(--muted);line-height:1.2;display:flex;flex-direction:column;align-items:center}
+.days button b{font-size:20px;color:var(--ink)}
+.days button span{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.days button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold)}
+.days button[aria-pressed="true"] b{color:var(--on-gold)}
+.days button.today span::after{content:" •"}
+.program{list-style:none;padding:0}
+.program > li{margin:0}
+.item{display:grid;grid-template-columns:56px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.program > li:last-child .item{border-bottom:0;padding-bottom:0}
+.item .time{font-weight:600;font-variant-numeric:tabular-nums;color:var(--gold)}
+.item .title{font-weight:600}
+.item .details{color:var(--muted);font-size:15px;margin-top:2px}
+.flight{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--field)}
+.flight-head{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.flight-no{color:var(--gold);white-space:nowrap}
+.flight-times{display:flex;gap:8px;align-items:baseline;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
+.flight-times span{color:var(--muted);font-size:16px;font-weight:400}
+.flight-meta{color:var(--muted);font-size:14px;margin-top:4px}
+.flight-day{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+
+/* kontakter og info */
+.contact{padding:4px 0}
+.contact + .contact{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 .contact-name{font-weight:600}
 .contact-phone{color:var(--muted)}
 .buttons{display:flex;gap:10px;margin-top:10px}
@@ -77,26 +122,13 @@ li{margin:4px 0}
 .checklist label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
 .checklist input{margin-top:4px;width:18px;height:18px;accent-color:var(--gold)}
 .checklist input:checked + span{color:var(--muted);text-decoration:line-through}
-.empty{color:var(--muted);font-style:italic}
-.days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:18px}
-.days button{border:0;background:none;border-radius:9px;padding:8px 2px;cursor:pointer;color:var(--muted);line-height:1.2;display:flex;flex-direction:column;align-items:center}
-.days button b{font-size:20px;color:var(--ink)}
-.days button span{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.days button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold)}
-.days button[aria-pressed="true"] b{color:var(--on-gold)}
-.days button.today span::after{content:" •"}
-.program{list-style:none;padding:0}
-.program li{display:grid;grid-template-columns:56px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);margin:0}
-.program li:last-child{border-bottom:0;padding-bottom:0}
-.program .time{font-weight:600;font-variant-numeric:tabular-nums;color:var(--gold)}
-.program .title{font-weight:600}
-.program .details{color:var(--muted);font-size:15px;margin-top:2px}
-.flight{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;background:var(--field)}
-.flight-head{display:flex;justify-content:space-between;gap:10px;font-weight:600}
-.flight-no{color:var(--gold);white-space:nowrap}
-.flight-times{display:flex;gap:8px;align-items:baseline;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
-.flight-times span{color:var(--muted);font-size:16px;font-weight:400}
-.flight-meta{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* rediger-dialog */
+dialog{border:0;border-radius:16px;background:var(--surface);color:var(--ink);width:min(92vw,480px);padding:18px;max-height:88vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin-bottom:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:13px;color:var(--muted);margin:4px 0 0}
 </style>
 </head>
 <body>
@@ -131,36 +163,73 @@ li{margin:4px 0}
     <button class="link" id="logout" type="button">Log ud</button>
   </header>
 
-  <nav class="days" id="days" aria-label="Vælg dag"></nav>
-  <section>
-    <h2 id="day-title">Program</h2>
-    <div id="flights"></div>
-    <ul class="program" id="program"></ul>
-  </section>
+  <div id="tab-program" role="tabpanel">
+    <section class="next" id="next" aria-live="polite"></section>
+    <nav class="days" id="days" aria-label="Vælg dag"></nav>
+    <section>
+      <h2 id="day-title">Program</h2>
+      <ul class="program" id="program"></ul>
+      <button class="add" id="add-item" type="button" hidden>+ Tilføj programpunkt</button>
+      <button class="add" id="add-flight-day" type="button" hidden>+ Tilføj fly</button>
+    </section>
+  </div>
 
-  <section>
-    <h2>Åbne punkter</h2>
-    <p class="note">Afkrydsninger gemmes kun på din egen telefon.</p>
-    <ul class="checklist" id="open-items"></ul>
-  </section>
+  <div id="tab-fly" role="tabpanel" hidden>
+    <section>
+      <h2>Alle fly</h2>
+      <div id="all-flights"></div>
+      <button class="add" id="add-flight" type="button" hidden>+ Tilføj fly</button>
+    </section>
+  </div>
 
-  <section>
-    <h2>Kontakt og praktisk</h2>
-    <div id="contacts"></div>
+  <div id="tab-kontakter" role="tabpanel" hidden>
+    <section>
+      <h2>Kontakter</h2>
+      <div id="contacts"></div>
+      <button class="add" id="add-contact" type="button" hidden>+ Tilføj kontakt</button>
+    </section>
+  </div>
 
-    <h3>Ved ankomst</h3>
-    <ul>
-      <li>Visumfrit for danskere i begge lande (op til 30 dage).</li>
-      <li>Usbekistan: man skal registreres inden for 3 dage. Hotellet gør det normalt automatisk.</li>
-      <li>Køb lokalt SIM-kort i lufthavnen. Yandex Go virker til taxa i begge lande.</li>
-      <li>Hav kontanter: usbekiske som og kasakhiske tenge.</li>
-      <li>Begge lande er GMT+5. Danmark skifter til vintertid søndag 25/10.</li>
-      <li>Vejr: ca. 5–18 grader, koldest i Astana. Tag varm jakke med.</li>
-    </ul>
-  </section>
+  <div id="tab-info" role="tabpanel" hidden>
+    <section>
+      <h2>Åbne punkter</h2>
+      <p class="note">Afkrydsninger gemmes kun på din egen telefon.</p>
+      <ul class="checklist" id="open-items"></ul>
+    </section>
 
-  <div id="private-sections"></div>
+    <section>
+      <h2>Ved ankomst</h2>
+      <ul>
+        <li>Visumfrit for danskere i begge lande (op til 30 dage).</li>
+        <li>Usbekistan: man skal registreres inden for 3 dage. Hotellet gør det normalt automatisk.</li>
+        <li>Køb lokalt SIM-kort i lufthavnen. Yandex Go virker til taxa i begge lande.</li>
+        <li>Hav kontanter: usbekiske som og kasakhiske tenge.</li>
+        <li>Begge lande er GMT+5. Danmark skifter til vintertid søndag 25/10.</li>
+        <li>Vejr: ca. 5–18 grader, koldest i Astana. Tag varm jakke med.</li>
+      </ul>
+    </section>
+
+    <div id="private-sections"></div>
+  </div>
 </main>
+
+<nav class="tabs" id="tabs" role="tablist" hidden>
+  <button type="button" role="tab" data-tab="program" aria-selected="true">Program</button>
+  <button type="button" role="tab" data-tab="fly" aria-selected="false">Fly</button>
+  <button type="button" role="tab" data-tab="kontakter" aria-selected="false">Kontakter</button>
+  <button type="button" role="tab" data-tab="info" aria-selected="false">Info</button>
+</nav>
+
+<dialog id="editor">
+  <form id="editForm" method="dialog">
+    <h2 id="editTitle"></h2>
+    <div id="editFields"></div>
+    <p class="err" id="editErr" role="alert"></p>
+    <button class="btn" id="editSave" type="submit">Gem</button>
+    <button class="btn ghost" id="editCancel" type="button">Annuller</button>
+    <button class="btn danger" id="editDelete" type="button" hidden>Slet</button>
+  </form>
+</dialog>
 
 <script src="vendor/supabase-js-2.45.4/supabase.js"></script>
 <script>
@@ -195,7 +264,8 @@ li{margin:4px 0}
   }
 
   // Login via Supabase. Brugernavne omsættes til interne login-adresser (der sendes ingen mails).
-  // Kontakter, dagpenge og riders ligger i Supabase og kan kun læses af godkendte brugere (RLS).
+  // Kontakter, program, fly og riders ligger i Supabase og kan kun læses af godkendte brugere (RLS).
+  // Kun admins (private.admins) kan rette.
   const SUPABASE_URL = "https://bjdglyurrpdnjgyfopek.supabase.co";
   const SUPABASE_KEY = "sb_publishable_7rEkE6x7gwGbS1s5LU8o3A_vjhkk21T";
   const EMAIL_DOMAIN = "outlandish-live.dk";
@@ -209,7 +279,7 @@ li{margin:4px 0}
     setItem: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
     removeItem: (k) => { try { sessionStorage.removeItem(k); localStorage.removeItem(k); } catch (e) {} },
   };
-  // Ryd sessioner, som den tidligere udgave gemte permanent.
+  // Ryd sessioner, som en tidligere udgave gemte permanent.
   try {
     for (const k of Object.keys(localStorage)) if (k.startsWith("sb-")) localStorage.removeItem(k);
   } catch (e) {}
@@ -225,80 +295,121 @@ li{margin:4px 0}
     return node;
   }
 
-  function showLogin() {
-    el("app").hidden = true;
-    el("login").hidden = false;
-    let saved = null;
-    try { saved = localStorage.getItem(USERNAME_KEY); } catch (e) {}
-    if (saved && !el("lUser").value) {
-      el("lUser").value = saved;
-      el("lPass").focus();
-    }
-  }
-
-  // Dagene på turen. Programmet for hver dag ligger i Supabase (schedule_items).
+  // ---------- tid ----------
   const DAYS = ["2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26"];
   const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
   const MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
     "august", "september", "oktober", "november", "december"];
-  const DAY_KEY = "outlandish-day";
-  let schedule = [];
-  let flights = [];
-
-  function renderFlights(iso) {
-    const box = el("flights");
-    box.replaceChildren();
-    for (const f of flights.filter((x) => x.day === iso)) {
-      const card = make("div", null, "flight");
-      const head = make("div", null, "flight-head");
-      head.append(make("span", `✈ ${f.from_place} → ${f.to_place}`), make("span", f.flight_no, "flight-no"));
-      card.append(head);
-      if (f.departs || f.arrives) {
-        const times = make("div", null, "flight-times");
-        times.append(document.createTextNode(f.departs || "?"), make("span", "→"), document.createTextNode(f.arrives || "?"));
-        card.append(times);
-      }
-      const meta = [
-        f.booking_ref && `Booking: ${f.booking_ref}`,
-        f.passengers && `Med: ${f.passengers}`,
-        f.notes,
-      ].filter(Boolean);
-      for (const m of meta) card.append(make("div", m, "flight-meta"));
-      box.append(card);
-    }
-  }
+  // Tider skrives som "14:30" (lokal tid, GMT+5) eller med zone: "14:55 DK", "19:15 TR".
+  const LOCAL_TZ = "UZ";
+  const DK_WINTER = Date.UTC(2026, 9, 25, 1); // Danmark skifter til vintertid 25/10 kl. 03 (01 UTC)
 
   const localDate = (iso) => new Date(iso + "T12:00:00");
+  const capital = (s) => s[0].toUpperCase() + s.slice(1);
   function todayIso() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
-
-  function selectDay(iso) {
-    try { sessionStorage.setItem(DAY_KEY, iso); } catch (e) {}
-    for (const b of el("days").children) b.setAttribute("aria-pressed", String(b.dataset.day === iso));
+  function parseTime(text) {
+    const m = /(\d{1,2})[:.](\d{2})(?:\s*([A-Za-z]{2}))?/.exec(text || "");
+    return m ? { h: +m[1], m: +m[2], tz: (m[3] || LOCAL_TZ).toUpperCase() } : null;
+  }
+  function instant(dayIso, text) {
+    const t = parseTime(text);
+    if (!t) return null;
+    const [y, mo, d] = dayIso.split("-").map(Number);
+    const guess = Date.UTC(y, mo - 1, d, t.h, t.m);
+    const offset = { UZ: 5, KZ: 5, TR: 3, DK: guess - 2 * 3600e3 < DK_WINTER ? 2 : 1 }[t.tz] ?? 5;
+    return new Date(guess - offset * 3600e3);
+  }
+  const minutesOf = (text) => { const t = parseTime(text); return t ? t.h * 60 + t.m : -1; };
+  function untilText(ms) {
+    const min = Math.round(ms / 60000);
+    if (min < 1) return "nu";
+    if (min < 60) return `om ${min} min`;
+    const h = Math.floor(min / 60), rest = min % 60;
+    if (h < 24) return rest ? `om ${h} t ${rest} min` : `om ${h} t`;
+    const days = Math.round(h / 24);
+    return days === 1 ? "i morgen" : `om ${days} dage`;
+  }
+  function dayLabel(iso) {
     const d = localDate(iso);
-    const weekday = WEEKDAYS[d.getDay()];
-    el("day-title").textContent =
-      `${weekday[0].toUpperCase() + weekday.slice(1)} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
-    renderFlights(iso);
-    const items = schedule.filter((i) => i.day === iso);
-    const list = el("program");
-    list.replaceChildren();
-    if (!items.length && !flights.some((f) => f.day === iso)) {
-      list.append(make("li", "Intet program for denne dag endnu.", "empty"));
-    }
-    for (const i of items) {
-      const li = make("li");
-      li.append(make("div", i.time || "", "time"));
-      const body = make("div");
-      body.append(make("div", i.title, "title"));
-      if (i.details) body.append(make("div", i.details, "details"));
-      li.append(body);
-      list.append(li);
-    }
+    return `${capital(WEEKDAYS[d.getDay()])} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
   }
 
+  // ---------- data ----------
+  let schedule = [], flights = [], contacts = [], isAdmin = false;
+  const DAY_KEY = "outlandish-day", TAB_KEY = "outlandish-tab";
+  let currentDay = DAYS[0];
+
+  async function loadData() {
+    const [c, s, p, f, a] = await Promise.all([
+      db.from("contacts").select("id, name, role, phone").order("position"),
+      db.from("private_sections").select("title, items").order("position"),
+      db.from("schedule_items").select("id, day, time, title, details").order("day").order("position"),
+      db.from("flights")
+        .select("id, day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
+        .order("day").order("position"),
+      db.rpc("am_i_admin"),
+    ]);
+    contacts = c.data || [];
+    schedule = p.data || [];
+    flights = f.data || [];
+    isAdmin = a.data === true;
+    renderSections(s.data || [], c.error || s.error || p.error || f.error);
+    renderAll();
+  }
+
+  function renderAll() {
+    for (const id of ["add-item", "add-flight-day", "add-flight", "add-contact"]) el(id).hidden = !isAdmin;
+    renderDays();
+    renderNext();
+    renderAllFlights();
+    renderContacts();
+  }
+
+  // ---------- nu og næste ----------
+  function events() {
+    const list = [];
+    for (const f of flights) {
+      const at = instant(f.day, f.departs);
+      if (at) list.push({ at, day: f.day, title: `✈ ${f.from_place} → ${f.to_place}`, when: `Afgang ${f.departs}` });
+    }
+    for (const i of schedule) {
+      const at = instant(i.day, i.time);
+      if (at) list.push({ at, day: i.day, title: i.title, when: `Kl. ${i.time}` });
+    }
+    return list.sort((a, b) => a.at - b.at);
+  }
+
+  function renderNext() {
+    const box = el("next");
+    box.replaceChildren();
+    const now = Date.now();
+    const upcoming = events().filter((e) => e.at > now);
+    if (!upcoming.length) {
+      box.hidden = !events().length;
+      box.append(make("div", "Turen er slut", "label"), make("div", "Tak for nu – god tur hjem!", "what"));
+      return;
+    }
+    box.hidden = false;
+    const [next, then] = upcoming;
+    box.append(
+      make("div", `Næste · ${untilText(next.at - now)}`, "label"),
+      make("div", next.title, "what"),
+      make("div", `${dayLabel(next.day)} · ${next.when}`, "when"),
+    );
+    if (then) {
+      const p = make("div", null, "then");
+      p.append("Derefter: ", make("b", then.title), ` · ${then.when}`);
+      box.append(p);
+    }
+    box.classList.add("editable");
+    box.onclick = () => selectDay(next.day);
+  }
+  setInterval(() => { if (!el("app").hidden) renderNext(); }, 30000);
+
+  // ---------- dage og program ----------
   function renderDays() {
     const nav = el("days");
     nav.replaceChildren();
@@ -315,58 +426,278 @@ li{margin:4px 0}
     }
     let saved = null;
     try { saved = sessionStorage.getItem(DAY_KEY); } catch (e) {}
-    selectDay(DAYS.includes(saved) ? saved : DAYS.includes(today) ? today : DAYS[0]);
+    selectDay(DAYS.includes(saved) ? saved : DAYS.includes(today) ? today : DAYS[0], false);
   }
 
-  async function showApp() {
-    el("login").hidden = true;
-    el("app").hidden = false;
-    renderDays();
+  function selectDay(iso, switchTab = true) {
+    currentDay = iso;
+    try { sessionStorage.setItem(DAY_KEY, iso); } catch (e) {}
+    if (switchTab) selectTab("program");
+    for (const b of el("days").children) b.setAttribute("aria-pressed", String(b.dataset.day === iso));
+    el("day-title").textContent = dayLabel(iso);
 
-    const [contacts, sections, program, flightRows] = await Promise.all([
-      db.from("contacts").select("name, role, phone").order("position"),
-      db.from("private_sections").select("title, items").order("position"),
-      db.from("schedule_items").select("day, time, title, details").order("day").order("position"),
-      db.from("flights")
-        .select("day, flight_no, from_place, to_place, departs, arrives, booking_ref, passengers, notes")
-        .order("day").order("position"),
-    ]);
-    schedule = program.data || [];
-    flights = flightRows.data || [];
-    selectDay(el("days").querySelector('[aria-pressed="true"]').dataset.day);
+    // Fly og programpunkter i tidsrækkefølge; punkter uden tid først.
+    const entries = [
+      ...flights.filter((f) => f.day === iso).map((f) => ({ sort: minutesOf(f.departs), node: flightCard(f) })),
+      ...schedule.filter((i) => i.day === iso).map((i) => ({ sort: minutesOf(i.time), node: itemRow(i) })),
+    ].sort((a, b) => a.sort - b.sort);
 
-    const contactsEl = el("contacts");
-    contactsEl.replaceChildren();
-    if (contacts.error || sections.error) {
-      contactsEl.append(make("p", "Kunne ikke hente kontakter. Tjek forbindelsen og prøv igen.", "empty"));
+    const list = el("program");
+    list.replaceChildren();
+    if (!entries.length) list.append(make("li", "Intet program for denne dag endnu.", "empty"));
+    for (const e of entries) {
+      const li = make("li");
+      li.append(e.node);
+      list.append(li);
     }
-    for (const c of contacts.data || []) {
-      const box = make("div", null, "contact");
-      box.append(make("div", c.role ? `${c.name}, ${c.role}` : c.name, "contact-name"));
+  }
+
+  function itemRow(i) {
+    const row = make("div", null, "item");
+    row.append(make("div", i.time || "", "time"));
+    const body = make("div");
+    body.append(make("div", i.title, "title"));
+    if (i.details) body.append(make("div", i.details, "details"));
+    row.append(body);
+    if (isAdmin) {
+      row.classList.add("editable");
+      row.onclick = () => editItem(i);
+    }
+    return row;
+  }
+
+  function flightCard(f) {
+    const card = make("div", null, "flight");
+    const head = make("div", null, "flight-head");
+    head.append(make("span", `✈ ${f.from_place} → ${f.to_place}`), make("span", f.flight_no, "flight-no"));
+    card.append(head);
+    if (f.departs || f.arrives) {
+      const times = make("div", null, "flight-times");
+      times.append(document.createTextNode(f.departs || "?"), make("span", "→"), document.createTextNode(f.arrives || "?"));
+      card.append(times);
+    }
+    const meta = [
+      f.booking_ref && `Booking: ${f.booking_ref}`,
+      f.passengers && `Med: ${f.passengers}`,
+      f.notes,
+    ].filter(Boolean);
+    for (const m of meta) card.append(make("div", m, "flight-meta"));
+    if (isAdmin) {
+      card.classList.add("editable");
+      card.onclick = () => editFlight(f);
+    }
+    return card;
+  }
+
+  function renderAllFlights() {
+    const box = el("all-flights");
+    box.replaceChildren();
+    if (!flights.length) box.append(make("p", "Ingen fly endnu.", "empty"));
+    let lastDay = null;
+    for (const f of [...flights].sort((a, b) => a.day.localeCompare(b.day) || minutesOf(a.departs) - minutesOf(b.departs))) {
+      if (f.day !== lastDay) box.append(make("div", dayLabel(f.day), "flight-day"));
+      lastDay = f.day;
+      box.append(flightCard(f));
+    }
+  }
+
+  // ---------- kontakter og info ----------
+  function renderContacts() {
+    const box = el("contacts");
+    box.replaceChildren();
+    if (!contacts.length) box.append(make("p", "Ingen kontakter endnu.", "empty"));
+    for (const c of contacts) {
+      const div = make("div", null, "contact");
+      div.append(make("div", c.role ? `${c.name}, ${c.role}` : c.name, "contact-name"));
       if (c.phone) {
         const digits = c.phone.replace(/[^\d+]/g, "");
-        box.append(make("div", c.phone, "contact-phone"));
+        div.append(make("div", c.phone, "contact-phone"));
         const buttons = make("div", null, "buttons");
         const call = make("a", "Ring");
         call.href = "tel:" + digits;
         const wa = make("a", "WhatsApp", "secondary");
         wa.href = "https://wa.me/" + digits.replace("+", "");
         buttons.append(call, wa);
-        box.append(buttons);
+        div.append(buttons);
       }
-      contactsEl.append(box);
+      if (isAdmin) {
+        const edit = make("button", "Ret kontakt", "link");
+        edit.type = "button";
+        edit.onclick = () => editContact(c);
+        div.append(edit);
+      }
+      box.append(div);
     }
+  }
 
-    const sectionsEl = el("private-sections");
-    sectionsEl.replaceChildren();
-    for (const s of sections.data || []) {
+  function renderSections(sections, error) {
+    const box = el("private-sections");
+    box.replaceChildren();
+    if (error) box.append(make("p", "Kunne ikke hente alle oplysninger. Tjek forbindelsen og prøv igen.", "empty"));
+    for (const s of sections) {
       const section = make("section");
       section.append(make("h2", s.title));
       const ul = make("ul");
       for (const item of s.items) ul.append(make("li", item));
       section.append(ul);
-      sectionsEl.append(section);
+      box.append(section);
     }
+  }
+
+  // ---------- faner ----------
+  function selectTab(name) {
+    try { sessionStorage.setItem(TAB_KEY, name); } catch (e) {}
+    for (const b of el("tabs").children) b.setAttribute("aria-selected", String(b.dataset.tab === name));
+    for (const t of ["program", "fly", "kontakter", "info"]) el("tab-" + t).hidden = t !== name;
+  }
+  for (const b of el("tabs").children) b.addEventListener("click", () => { selectTab(b.dataset.tab); scrollTo(0, 0); });
+
+  // ---------- redigering (kun admin) ----------
+  // Felter: [navn, label, type, hint]. Værdier gemmes som tekst; tomme felter bliver null.
+  let onSave = null, onDelete = null;
+  function openEditor(title, fields, values, save, del) {
+    el("editTitle").textContent = title;
+    const box = el("editFields");
+    box.replaceChildren();
+    for (const [name, label, type, hint] of fields) {
+      const wrap = make("div", null, "mt");
+      const l = make("label", label, "f");
+      l.htmlFor = "e-" + name;
+      let input;
+      if (type === "day") {
+        input = make("select", null, "field");
+        for (const d of DAYS) {
+          const o = make("option", dayLabel(d));
+          o.value = d;
+          input.append(o);
+        }
+      } else if (type === "textarea") {
+        input = make("textarea", null, "field");
+      } else {
+        input = make("input", null, "field");
+      }
+      input.id = "e-" + name;
+      input.name = name;
+      input.value = values[name] ?? "";
+      wrap.append(l, input);
+      if (hint) wrap.append(make("p", hint, "hint"));
+      box.append(wrap);
+    }
+    el("editErr").textContent = "";
+    el("editDelete").hidden = !del;
+    onSave = save;
+    onDelete = del;
+    el("editor").showModal();
+  }
+
+  function formValues() {
+    const out = {};
+    for (const input of el("editFields").querySelectorAll("[name]")) {
+      const v = input.value.trim();
+      out[input.name] = v === "" ? null : v;
+    }
+    return out;
+  }
+
+  async function run(action) {
+    el("editSave").disabled = true;
+    const { error } = await action();
+    el("editSave").disabled = false;
+    if (error) {
+      el("editErr").textContent = "Blev ikke gemt – prøv igen.";
+      return;
+    }
+    el("editor").close();
+    await loadData();
+  }
+
+  el("editForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const values = formValues();
+    const missing = [...el("editFields").querySelectorAll("[name][data-required]")].find((i) => !i.value.trim());
+    if (missing) { el("editErr").textContent = "Udfyld de påkrævede felter."; return; }
+    run(() => onSave(values));
+  });
+  el("editCancel").onclick = () => el("editor").close();
+  el("editDelete").onclick = () => { if (confirm("Vil du slette det?")) run(() => onDelete()); };
+
+  function requireFields(...names) {
+    for (const n of names) el("e-" + n)?.setAttribute("data-required", "");
+  }
+
+  const ITEM_FIELDS = [
+    ["day", "Dag", "day"],
+    ["time", "Tid", "text", "Fx 17:30. Lokal tid (GMT+5), skriv DK eller TR efter tiden ved anden tidszone."],
+    ["title", "Hvad", "text"],
+    ["details", "Detaljer", "textarea"],
+  ];
+  function editItem(i) {
+    const table = db.from("schedule_items");
+    openEditor(i ? "Ret programpunkt" : "Nyt programpunkt", ITEM_FIELDS, i || { day: currentDay },
+      (v) => i ? table.update(v).eq("id", i.id) : table.insert(v),
+      i && (() => table.delete().eq("id", i.id)));
+    requireFields("title");
+  }
+
+  const FLIGHT_FIELDS = [
+    ["day", "Dag (afgang)", "day"],
+    ["from_place", "Fra", "text"],
+    ["to_place", "Til", "text"],
+    ["departs", "Afgang", "text", "Fx 14:55 DK. Uden zone betyder lokal tid (GMT+5)."],
+    ["arrives", "Ankomst", "text", "Fx 19:15 TR."],
+    ["flight_no", "Flynummer", "text"],
+    ["booking_ref", "Bookingnummer", "text"],
+    ["passengers", "Hvem er med", "text"],
+    ["notes", "Noter", "textarea", "Fx check-in, afgang fra hotel, terminal."],
+  ];
+  function editFlight(f) {
+    const table = db.from("flights");
+    openEditor(f ? "Ret fly" : "Nyt fly", FLIGHT_FIELDS, f || { day: currentDay },
+      (v) => f ? table.update(v).eq("id", f.id) : table.insert(v),
+      f && (() => table.delete().eq("id", f.id)));
+    requireFields("from_place", "to_place");
+  }
+
+  const CONTACT_FIELDS = [
+    ["name", "Navn", "text"],
+    ["role", "Rolle", "text", "Fx hovedkontakt, chauffør, promotor."],
+    ["phone", "Telefon", "text", "Med landekode, fx +7 778 330 0003."],
+  ];
+  function editContact(c) {
+    const table = db.from("contacts");
+    openEditor(c ? "Ret kontakt" : "Ny kontakt", CONTACT_FIELDS, c || {},
+      (v) => c ? table.update(v).eq("id", c.id) : table.insert({ ...v, position: contacts.length + 1 }),
+      c && (() => table.delete().eq("id", c.id)));
+    requireFields("name");
+  }
+
+  el("add-item").onclick = () => editItem(null);
+  el("add-flight").onclick = () => editFlight(null);
+  el("add-flight-day").onclick = () => editFlight(null);
+  el("add-contact").onclick = () => editContact(null);
+
+  // ---------- login ----------
+  function showLogin() {
+    el("app").hidden = true;
+    el("tabs").hidden = true;
+    el("login").hidden = false;
+    let saved = null;
+    try { saved = localStorage.getItem(USERNAME_KEY); } catch (e) {}
+    if (saved && !el("lUser").value) {
+      el("lUser").value = saved;
+      el("lPass").focus();
+    }
+  }
+
+  async function showApp() {
+    el("login").hidden = true;
+    el("app").hidden = false;
+    el("tabs").hidden = false;
+    let tab = null;
+    try { tab = sessionStorage.getItem(TAB_KEY); } catch (e) {}
+    selectTab(["program", "fly", "kontakter", "info"].includes(tab) ? tab : "program");
+    renderAll();
+    await loadData();
   }
 
   el("loginForm").addEventListener("submit", async (e) => {

@@ -27,6 +27,20 @@ e-mail `navn@outlandish-live.dk`, password, og sæt flueben i **Auto Confirm Use
 insert into private.allowed_emails (email) values ('navn@outlandish-live.dk');
 ```
 
+## Appen
+
+Fire faner nederst: **Program** (med "Næste" øverst og dagvælger), **Fly**, **Kontakter** og **Info**.
+
+**Admins kan rette direkte i appen:** tryk på et programpunkt, et fly eller "Ret kontakt", eller brug
+"+ Tilføj". Admins står i `private.admins` (lige nu `luke@outlandish-live.dk`). Andre brugere kan kun læse.
+Tilføj en admin i Supabase → **SQL Editor**:
+
+```sql
+insert into private.admins (email) values ('navn@outlandish-live.dk');
+```
+
+Tider skrives som `17:30` (lokal tid, GMT+5) eller med zone: `14:55 DK`, `19:15 TR`. "Næste" bruger dem til nedtællingen.
+
 ## Dagsprogram
 
 Øverst kan man vælge dag (22.–26. oktober). Programmet ligger i tabellen `public.schedule_items`.
